@@ -11,9 +11,9 @@ You need python3 and beautifulsoup4 (you can get it with pip)
 
 How to use:
 
+```python
 from pushbullet import PushBullet
 
-```python
 p = PushBullet()
 p.signIn("user@gmail.com", "secret")
 devices = p.getDevices()
