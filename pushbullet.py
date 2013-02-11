@@ -1,10 +1,23 @@
-#!/usr/bin/python3
-
 # -*- coding: utf-8 -*-
-import http.cookiejar
-import urllib.request
-import json
+try:
+    from http.cookiejar import CookieJar
+except ImportError:
+    from cookielib import CookieJar
+try:
+    from urllib.request import build_opener, HTTPCookieProcessor
+except ImportError:
+    from urllib2 import build_opener, HTTPCookieProcessor
+try:
+    from urllib.request import Request
+except:
+    from urllib2 import Request
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
+
 from bs4 import BeautifulSoup
+import json
 
 HOST = 'https://www.pushbullet.com';
 
@@ -13,18 +26,18 @@ def extract_form_fields(soup):
     fields = {}
     for input in soup.findAll('input'):
         try:
-            fields[input['name']] = input['value']
+            fields[input['name']] = input['value'].encode('utf-8')
         except KeyError:
             pass
     return fields
 
 class PushBullet():
     def __init__(self):
-        self.cj = http.cookiejar.CookieJar()
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cj))
+        self.cj = CookieJar()
+        self.opener = build_opener(HTTPCookieProcessor(self.cj))
 
     def signIn(self, email, password):
-        request = urllib.request.Request(HOST + "/signin")
+        request = Request(HOST + "/signin")
         f = self.opener.open(request)
         response = f.read()
         response = response.decode('utf-8')
@@ -33,15 +46,15 @@ class PushBullet():
         fields = extract_form_fields(form)
         fields['Email'] = email
         fields['Passwd'] = password
-        postdata = urllib.parse.urlencode(fields)
+        postdata = urlencode(fields)
         postdata = postdata.encode('utf-8')
-        request = urllib.request.Request(form['action'])
+        request = Request(form['action'])
         f = self.opener.open(request, postdata)
         response = f.read()
         response = response.decode('utf-8')
 
     def getDevices(self):
-        request = urllib.request.Request(HOST + "/devices")
+        request = Request(HOST + "/devices")
         request.add_header("Accept", "application/json")
         f = self.opener.open(request)
         response = f.read()
@@ -51,7 +64,7 @@ class PushBullet():
         return j['devices']
 
     def pushNotification(self, data):
-        request = urllib.request.Request(HOST + "/push/" + data['type'])
+        request = Request(HOST + "/push/" + data['type'])
         request.add_header("Content-type","application/json");
         request.add_header("Accept", "application/json")
 
