@@ -7,7 +7,7 @@ My friend showed me PushBullet, I liked it. I like Python, combine the two to ac
 
 This is currently very new, quickly written, and may or may not actually be functional. If it breaks feel free to file a bug report (bonus points for patches)
 
-You need python3 and beautifulsoup4 (you can get it with pip)
+You need python (2 or 3) and beautifulsoup4 (you can get it with pip)
 
 How to use:
 
