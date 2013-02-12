@@ -31,6 +31,13 @@ def extract_form_fields(soup):
             pass
     return fields
 
+class PushBulletError():
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
 class PushBullet():
     def __init__(self):
         self.cj = CookieJar()
@@ -52,6 +59,12 @@ class PushBullet():
         f = self.opener.open(request, postdata)
         response = f.read()
         response = response.decode('utf-8')
+        if f.url != HOST + "/":
+            soup = BeautifulSoup(response)
+            alert = soup.find(role="alert")
+            if alert:
+                raise PushBulletError(alert.contents[0].strip())
+            raise PushBulletError("Unable to sign in")
 
     def getDevices(self):
         request = Request(HOST + "/devices")
