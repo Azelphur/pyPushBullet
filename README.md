@@ -9,7 +9,7 @@ You need python (2 or 3), that's it!
 
 You can get your API Key from https://www.pushbullet.com/settings
 
-How to use:
+Using the library:
 
 ```python
 from pushbullet import PushBullet
@@ -30,4 +30,14 @@ p.pushList(devices[0]["id"], "Groceries", ["Apples", "Bread", "Milk"])
 
 # Send a link
 p.pushLink(devices[0]["id"], "Google", "http://www.google.com")
+```
+
+Using the command line tool:
+```
+./pushbullet_cmd.py YOUR_API_KEY_HERE getdevices
+./pushbullet_cmd.py YOUR_API_KEY_HERE note 12345 "Hello World" "Test Body"
+./pushbullet_cmd.py YOUR_API_KEY_HERE address 12345 "Eiffel tower" "Eeiffel tower, france"
+./pushbullet_cmd.py YOUR_API_KEY_HERE list 12345 Groceries Apples Bread Milk
+./pushbullet_cmd.py YOUR_API_KEY_HERE link 12345 Google http://www.google.com
+
 ```
