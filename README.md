@@ -41,3 +41,6 @@ Using the command line tool:
 ./pushbullet_cmd.py YOUR_API_KEY_HERE link 12345 Google http://www.google.com
 
 ```
+
+Questions? Comments?
+Feel free to drop me a line on IRC, irc.azelphur.com #azelphur
