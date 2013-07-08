@@ -30,6 +30,9 @@ p.pushList(devices[0]["id"], "Groceries", ["Apples", "Bread", "Milk"])
 
 # Send a link
 p.pushLink(devices[0]["id"], "Google", "http://www.google.com")
+
+# Send a file
+p.pushLink(devices[0]["id"], "filename")
 ```
 
 Using the command line tool:
@@ -39,6 +42,7 @@ Using the command line tool:
 ./pushbullet_cmd.py YOUR_API_KEY_HERE address 12345 "Eiffel tower" "Eeiffel tower, france"
 ./pushbullet_cmd.py YOUR_API_KEY_HERE list 12345 Groceries Apples Bread Milk
 ./pushbullet_cmd.py YOUR_API_KEY_HERE link 12345 Google http://www.google.com
+./pushbullet_cmd.py YOUR_API_KEY_HERE file 12345 test.jpg
 
 ```
 

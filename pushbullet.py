@@ -6,6 +6,8 @@ except:
 
 from base64 import encodestring, b64encode
 import json
+import mimetypes
+import os
 
 HOST = "https://www.pushbullet.com/api";
 
@@ -38,6 +40,52 @@ class PushBullet():
         data = data.decode("utf-8")
         j = json.loads(data)
         return j
+        
+    def _request_multiform(self, url, postdata, files):
+        request = Request(url)
+        content_type, body = self._encode_multipart_formdata(postdata, files)
+        request.add_header("Accept", "application/json")
+        request.add_header("Content-type", content_type);
+        auth = "%s:" % (self.apiKey)
+        auth = auth.encode('ascii')
+        auth = b64encode(auth)
+        auth = b"Basic "+auth
+        request.add_header("Authorization", auth)
+        request.add_header("User-Agent", "pyPushBullet")
+        response = urlopen(request, body)
+        data = response.read()
+        data = data.decode("utf-8")
+        j = json.loads(data)
+        return j
+        
+    def _encode_multipart_formdata(self, fields, files):
+        '''
+        from http://mattshaw.org/news/multi-part-form-post-with-files-in-python/
+        '''
+        def guess_type(filename):
+            return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        
+        BOUNDARY = '----------bound@ry_$'
+        CRLF = '\r\n'
+        L = []
+        for key,value in fields.iteritems():
+            L.append('--'+BOUNDARY)
+            L.append('Content-Disposition: form-data; name="%s"'%(key))
+            L.append('')
+            L.append(str(value))
+            
+        for (key, filename, value) in files:
+            L.append('--'+BOUNDARY)
+            L.append('Content-Disposition: form-data; name="%s"; filename="%s"'%(key, filename))
+            L.append('Content-Type: %s'%(guess_type(filename)))
+            L.append('')
+            L.append(value)
+            
+        L.append('--'+BOUNDARY+'--')
+        L.append('')
+        body = CRLF.join(L)
+        content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
+        return content_type, body
 
     def getDevices(self):
         return self._request(HOST + "/devices")["devices"]
@@ -71,3 +119,10 @@ class PushBullet():
                 'url'     : url}
         return self._request(HOST + "/pushes", data)
 
+    def pushFile(self, device, file):
+        data = {'type'      : 'file',
+                'device_id' : device}
+        filedata = ''
+        with open(file, "rb") as f:
+            filedata = f.read()
+        return self._request_multiform(HOST + "/pushes", data, [('file', os.path.basename(file), filedata)])
