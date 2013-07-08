@@ -104,6 +104,28 @@ def pushLink(args):
             print("OK")
         else:
             print("ERROR %s" % (link))
+            
+def pushFile(args):
+    p = PushBullet(args.api_key)
+    try:
+        file = p.pushFile(args.device, args.file)
+    except HTTPError:
+        _, e, _ = sys.exc_info()
+        print("The server couldn\'t fulfill the request.")
+        print("Error code: %s" % (e.code))
+    except URLError:
+        _, e, _ = sys.exc_info()
+        print("We failed to reach a server.")
+        print("Reason: %s" % (e.reason))
+    else:
+        if args.json:
+            print(file)
+            return
+        if "created" in file:
+            print("OK")
+        else:
+            print("ERROR %s" % (file))
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--json", default=False, action="store_const", const=True)
@@ -136,6 +158,11 @@ link.add_argument('device', type=int, help="Device ID")
 link.add_argument('title')
 link.add_argument('url')
 link.set_defaults(func=pushLink)
+
+file = subparser.add_parser("file", help="Send a file")
+file.add_argument('device', type=int, help="Device ID")
+file.add_argument('file')
+file.set_defaults(func=pushFile)
 
 args = parser.parse_args()
 args.func(args)
