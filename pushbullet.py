@@ -9,7 +9,7 @@ import json
 import mimetypes
 import os
 
-HOST = "https://www.pushbullet.com/api";
+HOST = "https://api.pushbullet.com/api";
 
 class PushBulletError():
     def __init__(self, value):
