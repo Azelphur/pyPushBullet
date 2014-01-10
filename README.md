@@ -32,7 +32,7 @@ p.pushList(devices[0]["id"], "Groceries", ["Apples", "Bread", "Milk"])
 p.pushLink(devices[0]["id"], "Google", "http://www.google.com")
 
 # Send a file
-p.pushLink(devices[0]["id"], "filename")
+p.pushFile(devices[0]["id"], "filename")
 ```
 
 Using the command line tool:
