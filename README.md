@@ -20,19 +20,19 @@ p = PushBullet(apiKey)
 devices = p.getDevices()
 
 # Send a note
-p.pushNote(devices[0]["id"], 'Hello world', 'Test body')
+p.pushNote(devices[0]["iden"], 'Hello world', 'Test body')
 
 # Send a map location
-p.pushAddress(devices[0]["id"], "Eiffel tower", "Eeiffel tower, france")
+p.pushAddress(devices[0]["iden"], "Eiffel tower", "Eeiffel tower, france")
 
 # Send a list
-p.pushList(devices[0]["id"], "Groceries", ["Apples", "Bread", "Milk"])
+p.pushList(devices[0]["iden"], "Groceries", ["Apples", "Bread", "Milk"])
 
 # Send a link
-p.pushLink(devices[0]["id"], "Google", "http://www.google.com")
+p.pushLink(devices[0]["iden"], "Google", "http://www.google.com")
 
 # Send a file
-p.pushFile(devices[0]["id"], "filename")
+p.pushFile(devices[0]["iden"], "filename")
 ```
 
 Using the command line tool:

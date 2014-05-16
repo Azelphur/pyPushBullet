@@ -1,128 +1,223 @@
 # -*- coding: utf-8 -*-
-try:
-    from urllib.request import Request, urlopen
-except:
-    from urllib2 import Request, urlopen
-
-from base64 import encodestring, b64encode
 import json
-import mimetypes
-import os
+import requests
+import magic
+from requests.auth import HTTPBasicAuth
+from websocket import create_connection
 
-HOST = "https://api.pushbullet.com/api";
+HOST = "https://api.pushbullet.com/v2"
 
-class PushBulletError():
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
 
 class PushBullet():
     def __init__(self, apiKey):
         self.apiKey = apiKey
 
-    def _request(self, url, postdata=None):
-        request = Request(url)
-        request.add_header("Accept", "application/json")
-        request.add_header("Content-type","application/json");
-        auth = "%s:" % (self.apiKey)
-        auth = auth.encode('ascii')
-        auth = b64encode(auth)
-        auth = b"Basic "+auth
-        request.add_header("Authorization", auth)
-        request.add_header("User-Agent", "pyPushBullet")
+    def _request(self, method, url, postdata=None, params=None, files=None):
+        headers = {"Accept": "application/json",
+                   "Content-Type": "application/json",
+                   "User-Agent": "pyPushBullet"}
+
         if postdata:
             postdata = json.dumps(postdata)
-            postdata = postdata.encode('utf-8')
-        response = urlopen(request, postdata)
-        data = response.read()
-        data = data.decode("utf-8")
-        j = json.loads(data)
-        return j
-        
-    def _request_multiform(self, url, postdata, files):
-        request = Request(url)
-        content_type, body = self._encode_multipart_formdata(postdata, files)
-        request.add_header("Accept", "application/json")
-        request.add_header("Content-type", content_type);
-        auth = "%s:" % (self.apiKey)
-        auth = auth.encode('ascii')
-        auth = b64encode(auth)
-        auth = b"Basic "+auth
-        request.add_header("Authorization", auth)
-        request.add_header("User-Agent", "pyPushBullet")
-        response = urlopen(request, body)
-        data = response.read()
-        data = data.decode("utf-8")
-        j = json.loads(data)
-        return j
-        
-    def _encode_multipart_formdata(self, fields, files):
-        '''
-        from http://mattshaw.org/news/multi-part-form-post-with-files-in-python/
-        '''
-        def guess_type(filename):
-            return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-        
-        BOUNDARY = '----------bound@ry_$'
-        CRLF = '\r\n'
-        L = []
-        for key,value in fields.iteritems():
-            L.append('--'+BOUNDARY)
-            L.append('Content-Disposition: form-data; name="%s"'%(key))
-            L.append('')
-            L.append(str(value))
-            
-        for (key, filename, value) in files:
-            L.append('--'+BOUNDARY)
-            L.append('Content-Disposition: form-data; name="%s"; filename="%s"'%(key, filename))
-            L.append('Content-Type: %s'%(guess_type(filename)))
-            L.append('')
-            L.append(value)
-            
-        L.append('--'+BOUNDARY+'--')
-        L.append('')
-        body = CRLF.join(L)
-        content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
-        return content_type, body
+
+        r = requests.request(method,
+                             url,
+                             data=postdata,
+                             params=params,
+                             headers=headers,
+                             files=files,
+                             auth=HTTPBasicAuth(self.apiKey, ""))
+
+        r.raise_for_status()
+        return r.json()
 
     def getDevices(self):
-        return self._request(HOST + "/devices")["devices"]
+        """ Get devices
+            https://docs.pushbullet.com/v2/devices
 
-    def pushNote(self, device, title, body):
-        data = {'type'      : 'note',
-                'device_id' : device,
-                'title'     : title,
-                'body'      : body}
-        return self._request(HOST + "/pushes", data)
+            Get a list of devices, and data about them.
+        """
 
-    def pushAddress(self, device, name, address):
-        data = {'type'      : 'address',
-                'device_id' : device,
-                'name'      : name,
-                'address'   : address}
-        return self._request(HOST + "/pushes", data)
+        return self._request("GET", HOST + "/devices")["devices"]
 
-    def pushList(self, device, title, items):
-        data = {'type'      : 'list',
-                'device_id' : device,
-                'title'     : title,
-                'items'     : items}
-        return self._request(HOST + "/pushes", data)
+    def deleteDevice(self, device_iden):
+        """ Delete a device
+            https://docs.pushbullet.com/v2/devices
 
+            Arguments:
+            device_iden -- iden of device to push to
+        """
 
-    def pushLink(self, device, title, url):
-        data = {'type'      : 'link',
-                'device_id' : device,
-                'title'     : title,
-                'url'     : url}
-        return self._request(HOST + "/pushes", data)
+        return self._request("DELETE", HOST + "/devices/" + device_iden)
 
-    def pushFile(self, device, file):
-        data = {'type'      : 'file',
-                'device_id' : device}
-        filedata = ''
-        with open(file, "rb") as f:
-            filedata = f.read()
-        return self._request_multiform(HOST + "/pushes", data, [('file', os.path.basename(file), filedata)])
+    def pushNote(self, device_iden, title, body):
+        """ Push a note
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            device_iden -- iden of device to push to
+            title -- a title for the note
+            body -- the body of the note
+        """
+
+        data = {"type": "note",
+                "device_iden": device_iden,
+                "title": title,
+                "body": body}
+        return self._request("POST", HOST + "/pushes", data)
+
+    def pushAddress(self, device_iden, name, address):
+        """ Push an address
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            device_iden -- iden of device to push to
+            name -- name for the address, eg "Bobs house"
+            address -- address of the address
+        """
+
+        data = {"type": "address",
+                "device_iden": device_iden,
+                "name": name,
+                "address": address}
+        return self._request("POST", HOST + "/pushes", data)
+
+    def pushList(self, device_iden, title, items):
+        """ Push a list
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            device_iden -- iden of device to push to
+            title -- a title for the list
+            items -- a list of items
+        """
+
+        data = {"type": "list",
+                "device_iden": device_iden,
+                "title": title,
+                "items": items}
+
+        return self._request("POST", HOST + "/pushes", data)
+
+    def pushLink(self, device_iden, title, url):
+        """ Push a link
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            device_iden -- iden of device to push to
+            title -- link title
+            url -- link url
+        """
+
+        data = {"type": "link",
+                "device_iden": device_iden,
+                "title": title,
+                "url": url}
+        return self._request("POST", HOST + "/pushes", data)
+
+    def pushFile(self, device_iden, file_name, file, file_type=None):
+        """ Push a file
+            https://docs.pushbullet.com/v2/pushes
+            https://docs.pushbullet.com/v2/upload-request
+
+            Arguments:
+            device_iden -- iden of device to push to
+            file_name -- name of the file
+            file -- a file object
+            file_type -- file mimetype, if not set, python-magic will be used
+        """
+
+        if not file_type:
+            mime = magic.Magic(mime=True)
+            file_type = mime.from_buffer(file.read(1024))
+            file.seek(0)
+
+        data = {"file_name": file_name,
+                "file_type": file_type}
+
+        upload_request = self._request("GET",
+                                       HOST + "/upload-request",
+                                       None,
+                                       data)
+
+        upload = requests.post(upload_request["upload_url"],
+                               data=upload_request["data"],
+                               files={"file": file},
+                               headers={"User-Agent": "pyPushBullet"})
+
+        upload.raise_for_status()
+
+        data = {"type": "file",
+                "device_iden": device_iden,
+                "file_name": file_name,
+                "file_type": file_type,
+                "file_url": upload_request["file_url"],
+                "body": "hello"}
+
+        return self._request("POST", HOST + "/pushes", data)
+
+    def getPushHistory(self, modified_after=0, cursor=None):
+        """ Get Push History
+            https://docs.pushbullet.com/v2/pushes
+
+            Returns a list of pushes
+
+            Arguments:
+            modified_after -- Request pushes modified after this timestamp
+            cursor -- Request another page of pushes (if necessary)
+        """
+        data = {"modified_after": modified_after}
+        if cursor:
+            data["cursor"] = cursor
+        return self._request("GET", HOST + "/pushes", None, data)["pushes"]
+
+    def deletePush(self, push_iden):
+        """ Delete push
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            push_iden -- the iden of the push to delete
+        """
+        return self._request("DELETE", HOST + "/pushes/" + push_iden)
+
+    def getContacts(self):
+        """ Gets your contacts
+            https://docs.pushbullet.com/v2/contacts
+
+            returns a list of contacts
+        """
+        return self._request("GET", HOST + "/contacts")["contacts"]
+
+    def deleteContact(self, contact_iden):
+        """ Delete a contact
+            https://docs.pushbullet.com/v2/contacts
+
+            Arguments:
+            contact_iden -- the iden of the contact to delete
+        """
+        return self._request("DELETE", HOST + "/contacts/" + contact_iden)
+
+    def getUser(self):
+        """ Get this users information
+            https://docs.pushbullet.com/v2/users
+        """
+        return self._request("GET", HOST + "/users/me")
+
+    def realtime(self, callback):
+        """ Opens a Realtime Event Stream
+            https://docs.pushbullet.com/stream
+
+            callback will be called with one argument, the JSON response
+            from the server, nop messages are filtered.
+
+            Arguments:
+            callback -- The function to call on activity
+        """
+
+        url = "wss://stream.pushbullet.com/websocket/" + self.apiKey
+        ws = create_connection(url)
+        while 1:
+            data = ws.recv()
+            data = json.loads(data)
+            if data["type"] != "nop":
+                callback(data)

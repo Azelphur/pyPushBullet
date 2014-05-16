@@ -1,130 +1,61 @@
 #!/usr/bin/python
 
 import argparse
-from pushbullet import PushBullet
 import sys
-
-try:
-    from urllib.request import URLError, HTTPError
-except:
-    from urllib2 import URLError, HTTPError
+import json
+from pushbullet import PushBullet
+from requests.exceptions import HTTPError
 
 def getDevices(args):
     p = PushBullet(args.api_key)
-    try:
-        devices = p.getDevices()
-    except HTTPError:
-        _, e, _ = sys.exc_info()
-        print("The server couldn\'t fulfill the request.")
-        print("Error code: %s" % (e.code))
-    except URLError:
-        _, e, _ = sys.exc_info()
-        print("We failed to reach a server.")
-        print("Reason: %s" % (e.reason))
-    else:
-        if args.json:
-            print(devices)
-            return
-        for device in devices:
-            if "nickname" in device["extras"]:
-                print("%s %s" % (device["id"], device["extras"]["nickname"]))
-            else:
-                print("%s %s %s" % (device["id"], device["extras"]["manufacturer"], device["extras"]["model"]))
+    devices = p.getDevices()
+    if args.json:
+        print(json.dumps(devices))
+        return
+    for device in devices:
+        print("%s %s %s" % (device["iden"],
+                            device["manufacturer"],
+                            device["model"]))
 
 def pushNote(args):
     p = PushBullet(args.api_key)
     note = p.pushNote(args.device, args.title, " ".join(args.body))
     if args.json:
-        print(note)
+        print(json.dumps(note))
         return
-    if "created" in note:
-        print("OK")
-    else:
-        print("ERROR %s" % (note))
+    print("Note %s sent to %s" % (note["iden"], note["target_device_iden"]))
 
 def pushAddress(args):
     p = PushBullet(args.api_key)
-    try:
-        address = p.pushAddress(args.device, args.name, " ".join(args.address))
-    except HTTPError:
-        _, e, _ = sys.exc_info()
-        print("The server couldn\'t fulfill the request.")
-        print("Error code: %s" % (e.code))
-    except URLError:
-        _, e, _ = sys.exc_info()
-        print("We failed to reach a server.")
-        print("Reason: %s" % (e.reason))
-    else:
-        if args.json:
-            print(address)
-            return
-        if "created" in address:
-            print("OK")
-        else:
-            print("ERROR %s" % (address))
+    address = p.pushAddress(args.device, args.name, " ".join(args.address))
+    if args.json:
+        print(json.dumps(address))
+        return
+    print("Address %s sent to %s" % (address["iden"], address["target_device_iden"]))
 
 def pushList(args):
     p = PushBullet(args.api_key)
-    try:
-        lst = p.pushList(args.device, args.title, args.list)
-    except HTTPError:
-        _, e, _ = sys.exc_info()
-        print("The server couldn\'t fulfill the request.")
-        print("Error code: %s" % (e.code))
-    except URLError:
-        _, e, _ = sys.exc_info()
-        print("We failed to reach a server.")
-        print("Reason: %s" % (e.reason))
-    else:
-        if args.json:
-            print(lst)
-            return
-        if "created" in lst:
-            print("OK")
-        else:
-            print("ERROR %s" % (lst))
+    lst = p.pushList(args.device, args.title, args.list)
+    if args.json:
+        print(json.dumps(lst))
+        return
+    print("List %s sent to %s" % (lst["iden"], lst["target_device_iden"]))
 
 def pushLink(args):
     p = PushBullet(args.api_key)
-    try:
-        link = p.pushLink(args.device, args.title, args.url)
-    except HTTPError:
-        _, e, _ = sys.exc_info()
-        print("The server couldn\'t fulfill the request.")
-        print("Error code: %s" % (e.code))
-    except URLError:
-        _, e, _ = sys.exc_info()
-        print("We failed to reach a server.")
-        print("Reason: %s" % (e.reason))
-    else:
-        if args.json:
-            print(link)
-            return
-        if "created" in link:
-            print("OK")
-        else:
-            print("ERROR %s" % (link))
+    link = p.pushLink(args.device, args.title, args.url)
+    if args.json:
+        print(json.dumps(link))
+        return
+    print("Link %s sent to %s" % (link["iden"], link["target_device_iden"]))
             
 def pushFile(args):
     p = PushBullet(args.api_key)
-    try:
-        file = p.pushFile(args.device, args.file)
-    except HTTPError:
-        _, e, _ = sys.exc_info()
-        print("The server couldn\'t fulfill the request.")
-        print("Error code: %s" % (e.code))
-    except URLError:
-        _, e, _ = sys.exc_info()
-        print("We failed to reach a server.")
-        print("Reason: %s" % (e.reason))
-    else:
-        if args.json:
-            print(file)
-            return
-        if "created" in file:
-            print("OK")
-        else:
-            print("ERROR %s" % (file))
+    file = p.pushFile(args.device, open(args.file, 'rb'))
+    if args.json:
+        print(json.dumps(file))
+        return
+    print("File %s sent to %s" % (file["iden"], file["target_device_iden"]))
 
 
 parser = argparse.ArgumentParser()
@@ -136,31 +67,31 @@ getdevices = subparser.add_parser("getdevices", help="Get a list of devices")
 getdevices.set_defaults(func=getDevices)
 
 note = subparser.add_parser("note", help="Send a note")
-note.add_argument('device', type=int, help="Device ID")
+note.add_argument('device', type=str, help="Device ID")
 note.add_argument('title')
 note.add_argument('body', nargs=argparse.REMAINDER)
 note.set_defaults(func=pushNote)
 
 address = subparser.add_parser("address", help="Send an address")
-address.add_argument('device', type=int, help="Device ID")
+address.add_argument('device', type=str, help="Device ID")
 address.add_argument('name')
 address.add_argument('address', nargs=argparse.REMAINDER)
 address.set_defaults(func=pushAddress)
 
 lst = subparser.add_parser("list", help="Send a list")
-lst.add_argument('device', type=int, help="Device ID")
+lst.add_argument('device', type=str, help="Device ID")
 lst.add_argument('title')
 lst.add_argument('list', nargs=argparse.REMAINDER)
 lst.set_defaults(func=pushList)
 
 link = subparser.add_parser("link", help="Send a link")
-link.add_argument('device', type=int, help="Device ID")
+link.add_argument('device', type=str, help="Device ID")
 link.add_argument('title')
 link.add_argument('url')
 link.set_defaults(func=pushLink)
 
 file = subparser.add_parser("file", help="Send a file")
-file.add_argument('device', type=int, help="Device ID")
+file.add_argument('device', type=str, help="Device ID")
 file.add_argument('file')
 file.set_defaults(func=pushFile)
 
