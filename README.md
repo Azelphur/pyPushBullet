@@ -5,9 +5,14 @@ Python library to interface with PushBullet
 
 My friend showed me PushBullet, I liked it. I like Python, combine the two to achieve greatness.
 
-You need python (2 or 3), that's it!
+You will need...
+- Python (2 or 3 should be fine)
+- websockets-client
+- requests
+- python-magic
+All of which are available from pip.
 
-You can get your API Key from https://www.pushbullet.com/settings
+You can get your API Key from https://www.pushbullet.com/account
 
 Using the library:
 
