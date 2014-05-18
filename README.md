@@ -37,7 +37,7 @@ p.pushList(devices[0]["iden"], "Groceries", ["Apples", "Bread", "Milk"])
 p.pushLink(devices[0]["iden"], "Google", "http://www.google.com")
 
 # Send a file
-p.pushFile(devices[0]["iden"], "filename")
+p.pushFile(devices[0]["iden"], "file.txt", open("file.txt", "rb"))
 ```
 
 Using the command line tool:
