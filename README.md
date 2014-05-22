@@ -7,7 +7,7 @@ My friend showed me PushBullet, I liked it. I like Python, combine the two to ac
 
 You will need...
 - Python (2 or 3 should be fine)
-- websockets-client
+- websocket-client
 - requests
 - python-magic
 All of which are available from pip.
