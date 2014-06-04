@@ -43,11 +43,11 @@ p.pushFile(devices[0]["iden"], "file.txt", open("file.txt", "rb"))
 Using the command line tool:
 ```
 ./pushbullet_cmd.py YOUR_API_KEY_HERE getdevices
-./pushbullet_cmd.py YOUR_API_KEY_HERE note 12345 "Hello World" "Test Body"
-./pushbullet_cmd.py YOUR_API_KEY_HERE address 12345 "Eiffel tower" "Eeiffel tower, france"
-./pushbullet_cmd.py YOUR_API_KEY_HERE list 12345 Groceries Apples Bread Milk
-./pushbullet_cmd.py YOUR_API_KEY_HERE link 12345 Google http://www.google.com
-./pushbullet_cmd.py YOUR_API_KEY_HERE file 12345 test.jpg
+./pushbullet_cmd.py YOUR_API_KEY_HERE note udeCmddJpl "Hello World" "Test Body"
+./pushbullet_cmd.py YOUR_API_KEY_HERE address udeCmddJpl "Eiffel tower" "Eeiffel tower, france"
+./pushbullet_cmd.py YOUR_API_KEY_HERE list udeCmddJpl Groceries Apples Bread Milk
+./pushbullet_cmd.py YOUR_API_KEY_HERE link udeCmddJpl Google http://www.google.com
+./pushbullet_cmd.py YOUR_API_KEY_HERE file udeCmddJpl test.jpg
 
 ```
 
