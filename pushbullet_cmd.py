@@ -6,6 +6,15 @@ import json
 from pushbullet import PushBullet
 from requests.exceptions import HTTPError
 
+def addDevice(args):
+    p = PushBullet(args.api_key)
+    devices = p.addDevice(args.nickname)
+    if args.json:
+        print(json.dumps(devices))
+        return
+    print("Device %s was assigned ID %s" % (devices["nickname"],
+                                            devices["iden"]))
+
 def getDevices(args):
     p = PushBullet(args.api_key)
     devices = p.getDevices()
@@ -65,6 +74,10 @@ subparser = parser.add_subparsers(dest="type")
 
 getdevices = subparser.add_parser("getdevices", help="Get a list of devices")
 getdevices.set_defaults(func=getDevices)
+
+adddevice = subparser.add_parser("adddevice", help="Add a new devices to your account")
+adddevice.add_argument('nickname')
+adddevice.set_defaults(func=addDevice)
 
 note = subparser.add_parser("note", help="Send a note")
 note.add_argument('device', type=str, help="Device ID")
