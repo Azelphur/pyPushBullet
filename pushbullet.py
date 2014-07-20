@@ -115,7 +115,7 @@ class PushBullet():
                 "url": url}
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushFile(self, device_iden, file_name, file, file_type=None):
+    def pushFile(self, device_iden, file_name, body, file, file_type=None):
         """ Push a file
             https://docs.pushbullet.com/v2/pushes
             https://docs.pushbullet.com/v2/upload-request
@@ -152,7 +152,7 @@ class PushBullet():
                 "file_name": file_name,
                 "file_type": file_type,
                 "file_url": upload_request["file_url"],
-                "body": "hello"}
+                "body": body}
 
         return self._request("POST", HOST + "/pushes", data)
 
