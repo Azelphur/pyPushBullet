@@ -31,6 +31,21 @@ class PushBullet():
         r.raise_for_status()
         return r.json()
 
+    def addDevice(self, device_name):
+        """ Push a note
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            device_name -- Human readable name for device
+            type -- stream, thats all there is currently
+
+        """
+
+        data = {"nickname": device_name,
+                "type": "stream"
+                }
+        return self._request("POST", HOST + "/devices", data)
+
     def getDevices(self):
         """ Get devices
             https://docs.pushbullet.com/v2/devices
