@@ -43,7 +43,7 @@ p.pushFile(devices[0]["iden"], "file.txt", "This is a text file", open("file.txt
 
 Using the command line tool:
 ```
-pushbullet_cmd.py YOUR_API_KEY_HERE getdevices
+./pushbullet_cmd.py YOUR_API_KEY_HERE getdevices
 ./pushbullet_cmd.py YOUR_API_KEY_HERE note udeCmddJpl "Hello World" "Test Body"
 ./pushbullet_cmd.py YOUR_API_KEY_HERE address udeCmddJpl "Eiffel tower" "Eeiffel tower, france"
 ./pushbullet_cmd.py YOUR_API_KEY_HERE list udeCmddJpl Groceries Apples Bread Milk
