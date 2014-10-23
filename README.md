@@ -7,9 +7,10 @@ My friend showed me PushBullet, I liked it. I like Python, combine the two to ac
 
 You will need...
 - Python (2 or 3 should be fine)
-- websocket-client
-- requests
-- python-magic
+- websocket-client - ```pip install websocket-client```
+- requests - ```pip install requests```
+- python-magic - ```brew install libmagic``` & ```pip install python-magic```
+
 All of which are available from pip.
 
 You can get your API Key from https://www.pushbullet.com/account
@@ -42,12 +43,12 @@ p.pushFile(devices[0]["iden"], "file.txt", "This is a text file", open("file.txt
 
 Using the command line tool:
 ```
-./pushbullet_cmd.py YOUR_API_KEY_HERE getdevices
-./pushbullet_cmd.py YOUR_API_KEY_HERE note udeCmddJpl "Hello World" "Test Body"
-./pushbullet_cmd.py YOUR_API_KEY_HERE address udeCmddJpl "Eiffel tower" "Eeiffel tower, france"
-./pushbullet_cmd.py YOUR_API_KEY_HERE list udeCmddJpl Groceries Apples Bread Milk
-./pushbullet_cmd.py YOUR_API_KEY_HERE link udeCmddJpl Google http://www.google.com
-./pushbullet_cmd.py YOUR_API_KEY_HERE file udeCmddJpl test.jpg
+./pushbullet_cmd.py getdevices
+./pushbullet_cmd.py note udeCmddJpl "Hello World" "Test Body"
+./pushbullet_cmd.py address udeCmddJpl "Eiffel tower" "Eeiffel tower, france"
+./pushbullet_cmd.py list udeCmddJpl Groceries Apples Bread Milk
+./pushbullet_cmd.py link udeCmddJpl Google http://www.google.com
+./pushbullet_cmd.py file udeCmddJpl test.jpg
 
 ```
 
