@@ -44,7 +44,10 @@ def pushNote(args):
     if args.json:
         print(json.dumps(note))
         return
-    print("Note %s sent to %s" % (note["iden"], note["target_device_iden"]))
+    if args.device[0] == '#':
+        print("Note broadcast to channel %s" % (args.device))
+    else:
+        print("Note %s sent to %s" % (note["iden"], note["target_device_iden"]))
 
 def pushAddress(args):
     p = PushBullet(args.api_key)
@@ -52,7 +55,10 @@ def pushAddress(args):
     if args.json:
         print(json.dumps(address))
         return
-    print("Address %s sent to %s" % (address["iden"], address["target_device_iden"]))
+    if args.device[0] == '#':
+        print("Address broadcast to channel %s" % (args.device))
+    else:
+        print("Address %s sent to %s" % (address["iden"], address["target_device_iden"]))
 
 def pushList(args):
     p = PushBullet(args.api_key)
@@ -60,7 +66,10 @@ def pushList(args):
     if args.json:
         print(json.dumps(lst))
         return
-    print("List %s sent to %s" % (lst["iden"], lst["target_device_iden"]))
+    if args.device[0] == '#':
+        print("List broadcast to channel %s" % (args.device))
+    else:
+        print("List %s sent to %s" % (lst["iden"], lst["target_device_iden"]))
 
 def pushLink(args):
     p = PushBullet(args.api_key)
@@ -68,7 +77,10 @@ def pushLink(args):
     if args.json:
         print(json.dumps(link))
         return
-    print("Link %s sent to %s" % (link["iden"], link["target_device_iden"]))
+    if args.device[0] == '#':
+        print("Link broadcast to channel %s" % (args.device))
+    else:
+        print("Link %s sent to %s" % (link["iden"], link["target_device_iden"]))
 
 def pushFile(args):
     p = PushBullet(args.api_key)
@@ -76,7 +88,10 @@ def pushFile(args):
     if args.json:
         print(json.dumps(file))
         return
-    print("File %s sent to %s" % (file["iden"], file["target_device_iden"]))
+    if args.device[0] == '#':
+        print("File broadcast to channel %s" % (args.device))
+    else:
+        print("File %s sent to %s" % (file["iden"], file["target_device_iden"]))
 
 
 parser = argparse.ArgumentParser()

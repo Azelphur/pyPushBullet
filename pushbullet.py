@@ -78,78 +78,97 @@ class PushBullet():
 
         return self._request("DELETE", HOST + "/devices/" + device_iden)
 
-    def pushNote(self, device_iden, title, body):
+    def pushNote(self, recipient, title, body):
         """ Push a note
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            device_iden -- iden of device to push to
+            recipient -- a device or a channel
             title -- a title for the note
             body -- the body of the note
         """
 
         data = {"type": "note",
-                "device_iden": device_iden,
                 "title": title,
                 "body": body}
+				
+        if recipient[0] == '#':
+            data["channel_tag"] = recipient[1:]
+        else:
+            data["device_iden"] = recipient
+
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushAddress(self, device_iden, name, address):
+    def pushAddress(self, recipient, name, address):
         """ Push an address
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            device_iden -- iden of device to push to
+            recipient -- a device or a channel
             name -- name for the address, eg "Bobs house"
             address -- address of the address
         """
 
         data = {"type": "address",
-                "device_iden": device_iden,
                 "name": name,
                 "address": address}
+				
+        if recipient[0] == '#':
+            data["channel_tag"] = recipient[1:]
+        else:
+            data["device_iden"] = recipient
+				
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushList(self, device_iden, title, items):
+    def pushList(self, recipient, title, items):
         """ Push a list
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            device_iden -- iden of device to push to
+            recipient -- a device or a channel
             title -- a title for the list
             items -- a list of items
         """
 
         data = {"type": "list",
-                "device_iden": device_iden,
                 "title": title,
                 "items": items}
+				
+        if recipient[0] == '#':
+            data["channel_tag"] = recipient[1:]
+        else:
+            data["device_iden"] = recipient
 
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushLink(self, device_iden, title, url):
+    def pushLink(self, recipient, title, url):
         """ Push a link
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            device_iden -- iden of device to push to
+            recipient -- a device or a channel
             title -- link title
             url -- link url
         """
 
         data = {"type": "link",
-                "device_iden": device_iden,
                 "title": title,
                 "url": url}
+				
+        if recipient[0] == '#':
+            data["channel_tag"] = recipient[1:]
+        else:
+            data["device_iden"] = recipient
+				
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushFile(self, device_iden, file_name, body, file, file_type=None):
+    def pushFile(self, recipient, file_name, body, file, file_type=None):
         """ Push a file
             https://docs.pushbullet.com/v2/pushes
             https://docs.pushbullet.com/v2/upload-request
 
             Arguments:
-            device_iden -- iden of device to push to
+            recipient -- a device or a channel
             file_name -- name of the file
             file -- a file object
             file_type -- file mimetype, if not set, python-magic will be used
@@ -176,11 +195,15 @@ class PushBullet():
         upload.raise_for_status()
 
         data = {"type": "file",
-                "device_iden": device_iden,
                 "file_name": file_name,
                 "file_type": file_type,
                 "file_url": upload_request["file_url"],
                 "body": body}
+				
+        if recipient[0] == '#':
+            data["channel_tag"] = recipient[1:]
+        else:
+            data["device_iden"] = recipient
 
         return self._request("POST", HOST + "/pushes", data)
 
