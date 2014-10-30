@@ -44,8 +44,10 @@ def pushNote(args):
     if args.json:
         print(json.dumps(note))
         return
-    if args.device[0] == '#':
+    if args.device and args.device[0] == '#':
         print("Note broadcast to channel %s" % (args.device))
+    elif not args.device:
+        print("Note %s sent to all devices" % (note["iden"]))
     else:
         print("Note %s sent to %s" % (note["iden"], note["target_device_iden"]))
 
@@ -55,8 +57,10 @@ def pushAddress(args):
     if args.json:
         print(json.dumps(address))
         return
-    if args.device[0] == '#':
+    if args.device and args.device[0] == '#':
         print("Address broadcast to channel %s" % (args.device))
+    elif not args.device:
+        print("Address %s sent to all devices" % (address["iden"]))
     else:
         print("Address %s sent to %s" % (address["iden"], address["target_device_iden"]))
 
@@ -66,8 +70,10 @@ def pushList(args):
     if args.json:
         print(json.dumps(lst))
         return
-    if args.device[0] == '#':
+    if args.device and args.device[0] == '#':
         print("List broadcast to channel %s" % (args.device))
+    elif not args.device:
+        print("List %s sent to all devices" % (lst["iden"]))
     else:
         print("List %s sent to %s" % (lst["iden"], lst["target_device_iden"]))
 
@@ -77,8 +83,10 @@ def pushLink(args):
     if args.json:
         print(json.dumps(link))
         return
-    if args.device[0] == '#':
+    if args.device and args.device[0] == '#':
         print("Link broadcast to channel %s" % (args.device))
+    elif not args.device:
+        print("Link %s sent to all devices" % (link["iden"]))
     else:
         print("Link %s sent to %s" % (link["iden"], link["target_device_iden"]))
 
@@ -88,8 +96,10 @@ def pushFile(args):
     if args.json:
         print(json.dumps(file))
         return
-    if args.device[0] == '#':
+    if args.device and args.device[0] == '#':
         print("File broadcast to channel %s" % (args.device))
+    elif not args.device:
+        print("File %s sent to all devices" % (file["iden"]))
     else:
         print("File %s sent to %s" % (file["iden"], file["target_device_iden"]))
 

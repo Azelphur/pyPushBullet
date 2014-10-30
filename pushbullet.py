@@ -92,7 +92,7 @@ class PushBullet():
                 "title": title,
                 "body": body}
 				
-        if recipient[0] == '#':
+        if recipient and recipient[0] == '#':
             data["channel_tag"] = recipient[1:]
         else:
             data["device_iden"] = recipient
@@ -113,7 +113,7 @@ class PushBullet():
                 "name": name,
                 "address": address}
 				
-        if recipient[0] == '#':
+        if recipient and recipient[0] == '#':
             data["channel_tag"] = recipient[1:]
         else:
             data["device_iden"] = recipient
@@ -134,7 +134,7 @@ class PushBullet():
                 "title": title,
                 "items": items}
 				
-        if recipient[0] == '#':
+        if recipient and recipient[0] == '#':
             data["channel_tag"] = recipient[1:]
         else:
             data["device_iden"] = recipient
@@ -155,7 +155,7 @@ class PushBullet():
                 "title": title,
                 "url": url}
 				
-        if recipient[0] == '#':
+        if recipient and recipient[0] == '#':
             data["channel_tag"] = recipient[1:]
         else:
             data["device_iden"] = recipient
@@ -200,7 +200,7 @@ class PushBullet():
                 "file_url": upload_request["file_url"],
                 "body": body}
 				
-        if recipient[0] == '#':
+        if recipient and recipient[0] == '#':
             data["channel_tag"] = recipient[1:]
         else:
             data["device_iden"] = recipient
