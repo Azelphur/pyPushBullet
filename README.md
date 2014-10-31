@@ -38,6 +38,9 @@ p.pushLink(devices[0]["iden"], "Google", "http://www.google.com")
 
 # Send a file
 p.pushFile(devices[0]["iden"], "file.txt", "This is a text file", open("file.txt", "rb"))
+
+# Send a note to a channel
+p.pushNote('#channel_tag', 'Hello world', 'Test body')
 ```
 
 Using the command line tool:
@@ -48,6 +51,7 @@ Using the command line tool:
 ./pushbullet_cmd.py YOUR_API_KEY_HERE list udeCmddJpl Groceries Apples Bread Milk
 ./pushbullet_cmd.py YOUR_API_KEY_HERE link udeCmddJpl Google http://www.google.com
 ./pushbullet_cmd.py YOUR_API_KEY_HERE file udeCmddJpl test.jpg
+./pushbullet_cmd.py YOUR_API_KEY_HERE note #channel_tag "Hello World" "Test Body"
 
 ```
 
