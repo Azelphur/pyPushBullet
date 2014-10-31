@@ -7,9 +7,10 @@ My friend showed me PushBullet, I liked it. I like Python, combine the two to ac
 
 You will need...
 - Python (2 or 3 should be fine)
-- websocket-client
-- requests
-- python-magic
+- websocket-client - ```pip install websocket-client```
+- requests - ```pip install requests```
+- python-magic - ```brew install libmagic``` & ```pip install python-magic```
+
 All of which are available from pip.
 
 You can get your API Key from https://www.pushbullet.com/account
