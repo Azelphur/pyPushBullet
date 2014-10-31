@@ -9,7 +9,7 @@ You will need...
 - Python (2 or 3 should be fine)
 - websocket-client - ```pip install websocket-client```
 - requests - ```pip install requests```
-- python-magic - ```brew install libmagic``` & ```pip install python-magic```
+- python-magic - ```pip install python-magic```
 
 All of which are available from pip.
 
