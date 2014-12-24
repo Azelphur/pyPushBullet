@@ -52,7 +52,7 @@ Using the command line tool:
 ./pushbullet_cmd.py YOUR_API_KEY_HERE list udeCmddJpl Groceries Apples Bread Milk
 ./pushbullet_cmd.py YOUR_API_KEY_HERE link udeCmddJpl Google http://www.google.com
 ./pushbullet_cmd.py YOUR_API_KEY_HERE file udeCmddJpl test.jpg
-./pushbullet_cmd.py YOUR_API_KEY_HERE note #channel_tag "Hello World" "Test Body"
+./pushbullet_cmd.py YOUR_API_KEY_HERE note "#channel_tag" "Hello World" "Test Body"
 
 ```
 
