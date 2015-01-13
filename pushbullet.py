@@ -78,100 +78,93 @@ class PushBullet():
 
         return self._request("DELETE", HOST + "/devices/" + device_iden)
 
-    def pushNote(self, recipient, title, body):
+    def pushNote(self, recipient, title, body, recipient_type="device_iden"):
         """ Push a note
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            recipient -- a device or a channel
+            recipient -- a recipient
             title -- a title for the note
             body -- the body of the note
+            recipient_type -- a type of recipient (device, email, channel or client)
         """
 
         data = {"type": "note",
                 "title": title,
                 "body": body}
-				
-        if recipient and recipient[0] == '#':
-            data["channel_tag"] = recipient[1:]
-        else:
-            data["device_iden"] = recipient
+
+        data[recipient_type] = recipient
 
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushAddress(self, recipient, name, address):
+    def pushAddress(self, recipient, name, address, recipient_type="device_iden"):
         """ Push an address
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            recipient -- a device or a channel
+            recipient -- a recipient
             name -- name for the address, eg "Bobs house"
             address -- address of the address
+            recipient_type -- a type of recipient (device, email, channel or client)
         """
 
         data = {"type": "address",
                 "name": name,
                 "address": address}
 				
-        if recipient and recipient[0] == '#':
-            data["channel_tag"] = recipient[1:]
-        else:
-            data["device_iden"] = recipient
+        data[recipient_type] = recipient
 				
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushList(self, recipient, title, items):
+    def pushList(self, recipient, title, items, recipient_type="device_iden"):
         """ Push a list
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            recipient -- a device or a channel
+            recipient -- a recipient
             title -- a title for the list
             items -- a list of items
+            recipient_type -- a type of recipient (device, email, channel or client)
         """
 
         data = {"type": "list",
                 "title": title,
                 "items": items}
 				
-        if recipient and recipient[0] == '#':
-            data["channel_tag"] = recipient[1:]
-        else:
-            data["device_iden"] = recipient
+        data[recipient_type] = recipient
 
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushLink(self, recipient, title, url):
+    def pushLink(self, recipient, title, url, recipient_type="device_iden"):
         """ Push a link
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
-            recipient -- a device or a channel
+            recipient -- a recipient
             title -- link title
             url -- link url
+            recipient_type -- a type of recipient (device, email, channel or client)
         """
 
         data = {"type": "link",
                 "title": title,
                 "url": url}
 				
-        if recipient and recipient[0] == '#':
-            data["channel_tag"] = recipient[1:]
-        else:
-            data["device_iden"] = recipient
+        data[recipient_type] = recipient
 				
         return self._request("POST", HOST + "/pushes", data)
 
-    def pushFile(self, recipient, file_name, body, file, file_type=None):
+    def pushFile(self, recipient, file_name, body, file, file_type=None, recipient_type="device_iden"):
         """ Push a file
             https://docs.pushbullet.com/v2/pushes
             https://docs.pushbullet.com/v2/upload-request
 
             Arguments:
-            recipient -- a device or a channel
+            recipient -- a recipient
             file_name -- name of the file
             file -- a file object
             file_type -- file mimetype, if not set, python-magic will be used
+            recipient_type -- a type of recipient (device, email, channel or client)
         """
 
         if not file_type:
@@ -200,10 +193,7 @@ class PushBullet():
                 "file_url": upload_request["file_url"],
                 "body": body}
 				
-        if recipient and recipient[0] == '#':
-            data["channel_tag"] = recipient[1:]
-        else:
-            data["device_iden"] = recipient
+        data[recipient_type] = recipient
 
         return self._request("POST", HOST + "/pushes", data)
 
