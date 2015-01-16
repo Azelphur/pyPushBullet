@@ -25,6 +25,9 @@ p = PushBullet(apiKey)
 # Get a list of devices
 devices = p.getDevices()
 
+# Get a list of contacts
+contacts = p.getcontacts()
+
 # Send a note
 p.pushNote(devices[0]["iden"], 'Hello world', 'Test body')
 
@@ -41,7 +44,12 @@ p.pushLink(devices[0]["iden"], "Google", "http://www.google.com")
 p.pushFile(devices[0]["iden"], "file.txt", "This is a text file", open("file.txt", "rb"))
 
 # Send a note to a channel
-p.pushNote('#channel_tag', 'Hello world', 'Test body')
+p.pushNote('channel_tag', 'Hello world', 'Test body', recipient_type='channel_tag')
+
+# Send a note to an email
+p.pushNote('myemail@domain.com', 'Hello world', 'Test body', recipient_type='email')
+
+
 ```
 
 Using the command line tool:
