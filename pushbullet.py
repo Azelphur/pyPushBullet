@@ -14,7 +14,6 @@
 
 import json
 import requests
-import magic
 from requests.auth import HTTPBasicAuth
 from websocket import create_connection
 
@@ -168,6 +167,7 @@ class PushBullet():
         """
 
         if not file_type:
+            import magic
             mime = magic.Magic(mime=True)
             file_type = mime.from_buffer(file.read(1024))
             file.seek(0)
