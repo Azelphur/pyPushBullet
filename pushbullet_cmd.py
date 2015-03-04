@@ -15,6 +15,7 @@
 import argparse
 import sys
 import json
+import os
 from pushbullet import PushBullet
 from requests.exceptions import HTTPError
 
@@ -95,7 +96,7 @@ def pushLink(args):
 
 def pushFile(args):
     p = PushBullet(args.api_key)
-    file = p.pushFile(args.device, open(args.file, 'rb'))
+    file = p.pushFile(args.device, os.path.basename(args.file), "", open(args.file, 'rb'))
     if args.json:
         print(json.dumps(file))
         return
