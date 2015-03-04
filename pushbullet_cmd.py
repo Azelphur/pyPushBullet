@@ -34,9 +34,12 @@ def getDevices(args):
         print(json.dumps(devices))
         return
     for device in devices:
-        print("%s %s %s" % (device["iden"],
+        if "manufacturer" in device:
+            print("%s %s %s" % (device["iden"],
                             device["manufacturer"],
                             device["model"]))
+        else:
+            print(device["iden"])
 
 def pushNote(args):
     p = PushBullet(args.api_key)
