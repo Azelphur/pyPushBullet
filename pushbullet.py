@@ -168,8 +168,7 @@ class PushBullet():
 
         if not file_type:
             import magic
-            mime = magic.Magic()
-            file_type = mime.from_buffer(file.read(1024))
+            file_type = magic.from_buffer(file.read(1024))
             file.seek(0)
 
         data = {"file_name": file_name,
