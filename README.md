@@ -26,7 +26,7 @@ p = PushBullet(apiKey)
 devices = p.getDevices()
 
 # Get a list of contacts
-contacts = p.getcontacts()
+contacts = p.getContacts()
 
 # Send a note
 p.pushNote(devices[0]["iden"], 'Hello world', 'Test body')
