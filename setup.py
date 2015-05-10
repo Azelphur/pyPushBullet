@@ -8,4 +8,9 @@ setup(name='pushbullet',
       author_email='support@azelphur.com',
       license='GPL',
       packages=['pushbullet'],
-      zip_safe=False)
+      zip_safe=False,
+      install_requires=[
+          'websocket-client',
+          'requests',
+          'python-magic'
+      ])
