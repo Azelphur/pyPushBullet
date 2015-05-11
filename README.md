@@ -7,11 +7,16 @@ My friend showed me PushBullet, I liked it. I like Python, combine the two to ac
 
 You will need...
 - Python (2 or 3 should be fine)
+
+**Dependencies**
+
+If you install pyPushBullet via ```pip install https://github.com/Azelphur/pyPushBullet``` the dependencies should be install automatically.
+
+However, if you want to install manually, you will need:
+
 - websocket-client - ```pip install websocket-client```
 - requests - ```pip install requests```
 - python-magic - ```pip install python-magic```
-
-All of which are available from pip.
 
 You can get your API Key from https://www.pushbullet.com/account
 
