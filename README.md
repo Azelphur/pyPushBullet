@@ -18,7 +18,7 @@ However, if you want to install manually, you will need:
 - requests - ```pip install requests```
 - python-magic - ```pip install python-magic```
 
-You can get your API Key from https://www.pushbullet.com/account
+You can get your API Key from https://www.pushbullet.com/#settings/account
 
 Using the library:
 
