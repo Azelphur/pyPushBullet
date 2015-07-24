@@ -10,7 +10,7 @@ You will need...
 
 **Dependencies**
 
-If you install pyPushBullet via ```pip install https://github.com/Azelphur/pyPushBullet``` the dependencies should be install automatically.
+If you install pyPushBullet via ```pip install git+https://github.com/Azelphur/pyPushBullet.git``` the dependencies should be install automatically.
 
 However, if you want to install manually, you will need:
 
