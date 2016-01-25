@@ -16,7 +16,7 @@ import argparse
 import sys
 import json
 import os
-from pushbullet import PushBullet
+from pushbullet.pushbullet import PushBullet
 from requests.exceptions import HTTPError
 
 def addDevice(args):
