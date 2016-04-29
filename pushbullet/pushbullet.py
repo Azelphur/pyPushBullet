@@ -167,7 +167,11 @@ class PushBullet():
         """
 
         if not file_type:
-            import magic
+            try:
+                import magic
+            except ImportError:
+                raise Exception("No file_type given and python-magic isn't installed")
+
             file_type = magic.from_buffer(file.read(1024))
             file.seek(0)
 

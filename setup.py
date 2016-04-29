@@ -11,6 +11,8 @@ setup(name='pushbullet',
       zip_safe=False,
       install_requires=[
           'websocket-client',
-          'requests',
-          'python-magic'
-      ])
+          'requests'
+      ],
+      extras_require={
+          'magic': ['python-magic']
+      })

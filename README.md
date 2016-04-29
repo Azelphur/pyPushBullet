@@ -16,6 +16,8 @@ However, if you want to install manually, you will need:
 
 - websocket-client - ```pip install websocket-client```
 - requests - ```pip install requests```
+
+And for automatic file type detection for pushFile (optional):
 - python-magic - ```pip install python-magic```
 
 You can get your API Key from https://www.pushbullet.com/#settings/account
