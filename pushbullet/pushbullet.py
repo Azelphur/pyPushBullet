@@ -258,6 +258,25 @@ class PushBullet():
         """
         return self._request("GET", HOST + "/users/me")
 
+    def dismissEphemeral(self, notification_id, notification_tag, package_name, source_user_iden):
+        """ Marks an ephemeral notification as dismissed
+            https://docs.pushbullet.com/v2/pushes
+
+            Arguments:
+            notification_id -- the id of the notification to dismiss
+            notification_tag -- the tag of the notification
+            package_name -- the name of the package that made the notification
+            source_user_iden -- the identifier for the user that made the notification
+        """
+        data = {"push": {"notification_id": notification_id,
+                         "notification_tag": notification_tag,
+                         "package_name": package_name,
+                         "source_user_iden": source_user_iden,
+                         "type": "dismissal"},
+                "type": "push"}
+
+        return self._request("POST", HOST + "/ephemerals", data)
+
     def realtime(self, callback):
         """ Opens a Realtime Event Stream
             https://docs.pushbullet.com/stream
