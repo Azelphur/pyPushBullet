@@ -167,8 +167,23 @@ class PushBullet():
         """
 
         if not file_type:
-            import magic
-            file_type = magic.from_buffer(file.read(1024))
+            try:
+                import magic
+            except ImportError:
+                raise Exception("No file_type given and python-magic isn't installed")
+
+            # Unfortunately there's two libraries called magic, both of which do
+            # the exact same thing but have different conventions for doing so
+            if hasattr(magic, "from_buffer"):
+                file_type = magic.from_buffer(file.read(1024))
+            else:
+                _magic = magic.open(magic.MIME_TYPE)
+                _magic.compile(None)
+
+                file_type = _magic.file(file_name)
+
+                _magic.close()
+
             file.seek(0)
 
         data = {"file_name": file_name,
