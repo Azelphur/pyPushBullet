@@ -30,7 +30,8 @@ BASE_URL = "https://api.pushbullet.com/v2/"
 
 class Device(object):
     """
-        This class represents a device, see https://docs.pushbullet.com/#device
+        This class represents a device
+        https://docs.pushbullet.com/#device
     """
     writable_attributes = [
         'nickname',
@@ -41,14 +42,14 @@ class Device(object):
         'icon',
         'has_sms'
     ]
-    
-    def __init__(self, attrs, pb, *args, **kwargs):
+
+    def __init__(self, pb, **kwargs):
         self.pb = pb
-        self.attrs = attrs
+        self.attrs = kwargs
+        
 
     def __setitem__(self, key, value):
         if key in self.writable_attributes:
-            self.update(**{key: value})
             self.attrs[key] = value
             return
         raise AttributeError("%s is read only" % (key))
@@ -57,7 +58,8 @@ class Device(object):
         return self.attrs[key]
 
     def push_note(self, title=None, body=None):
-        """ Push a note
+        """
+            Push a note
             https://docs.pushbullet.com/v2/pushes
 
             Arguments:
@@ -130,12 +132,33 @@ class Device(object):
             has_sms=has_sms
         )
 
+    def commit(self):
+        """
+            Creates device if it does not exist, otherwise updates.
+        """
+        if 'iden' in self.attrs:
+            f = self.update
+        else:
+            f = self.pb.create_device
+
+        device = f(
+            nickname=self.attrs['nickname'] if 'nickname' in self.attrs else None,
+            model=self.attrs['model'] if 'model' in self.attrs else None,
+            manufacturer=self.attrs['manufacturer'] if 'manufacturer' in self.attrs else None,
+            push_token=self.attrs['push_token'] if 'push_token' in self.attrs else None,
+            app_version=self.attrs['app_version'] if 'app_version' in self.attrs else None,
+            icon=self.attrs['icon'] if 'icon' in self.attrs else None,
+            has_sms=self.attrs['has_sms'] if 'has_sms' in self.attrs else None
+        )
+        self.attrs = dict(device.attrs)
+        return device
+
     def delete(self):
         """
             Delete a device
             https://docs.pushbullet.com/#delete-device
         """
-        return self.pb.delete_device(self.attrs['iden']
+        return self.pb.delete_device(self.attrs['iden'])
 
 
 class Push(object):
@@ -144,9 +167,9 @@ class Push(object):
     """
     writable_attributes = ['dismissed']
 
-    def __init__(self, attrs, pb, *args, **kwargs):
+    def __init__(self, pb, **kwargs):
         self.pb = pb
-        self.attrs = attrs
+        self.attrs = kwargs
 
     def __setitem__(self, key, value):
         if key in self.writable_attributes:
@@ -185,6 +208,7 @@ class PushBullet(object):
             headers=headers,
             files=files,
         )
+        print(r.text)
         r.raise_for_status()
         return r.json()
 
@@ -212,7 +236,7 @@ class PushBullet(object):
             'has_sms': has_sms
         }
         response = self._request("POST", "devices", data)
-        return Device(response, self)
+        return Device(pb=self, **response)
 
     def update_device(self, device_iden, nickname=None, model=None, manufacturer=None, push_token=None, app_version=None, icon=None, has_sms=None):
         """
@@ -239,7 +263,7 @@ class PushBullet(object):
             'has_sms': has_sms
         }
         response = self._request("POST", "devices/"+device_iden, data)
-        return Device(response, self)
+        return Device(pb=self, **response)
 
     def list_devices(self):
         """
@@ -287,7 +311,7 @@ class PushBullet(object):
             'client_iden': client_iden
         }
         response = self._request("POST", "pushes", data)
-        return Push(response, self)
+        return Push(self, **response)
 
     def push_link(self, url, title=None, body=None, device_iden=None, email=None, channel_tag=None, client_iden=None):
         """
@@ -316,7 +340,7 @@ class PushBullet(object):
             'client_iden': client_iden
         }
         response = self._request("POST", "pushes", data)
-        return Push(response, self)
+        return Push(self, **response)
 
     def push_file(self, file, file_name=None, file_type=None, body=None, device_iden=None, email=None, channel_tag=None, client_iden=None):
         """
@@ -386,7 +410,7 @@ class PushBullet(object):
             'client_iden': client_iden
         }
         response = self._request("POST", "pushes", data)
-        return Push(response, self)
+        return Push(self, **response)
 
     def update_push(self, iden, dismissed):
         """
@@ -398,7 +422,7 @@ class PushBullet(object):
             dismissed -- Marks a push as having been dismissed by the user
         """
         response = self._request("POST", "pushes/"+iden, {'dismissed': dismissed})
-        return Push(response, self)
+        return Push(self, **response)
 
     def list_pushes(self, modified_after=None, active=None, cursor=None, limit=None):
         """
@@ -412,7 +436,7 @@ class PushBullet(object):
             'limit': limit
         }
         response = self._request("GET", "pushes", params=params)
-        pushes = [Push(push, self) for push in response['pushes']]
+        pushes = [Push(self, **push) for push in response['pushes']]
         while 'cursor' in response and (not limit or len(pushes) < limit):
             params = {
                 'modified_after': modified_after,
@@ -421,7 +445,7 @@ class PushBullet(object):
                 'limit': limit
             }
             response = self._request("GET", "pushes", params=params)
-            pushes += [Push(push, self) for push in response['pushes']]
+            pushes += [Push(self, **push) for push in response['pushes']]
         return pushes
 
     def delete_push(self, iden):
