@@ -21,9 +21,10 @@
 # OR OTHER DEALINGS IN THE SOFTWARE.
 
 import requests
+import json
 from urlparse import urljoin
 from os.path import basename
-import json
+from websocket import create_connection
 
 BASE_URL = "https://api.pushbullet.com/v2/"
 
@@ -173,7 +174,6 @@ class Push(object):
 
     def __setitem__(self, key, value):
         if key in self.writable_attributes:
-            self.update(**{key: value})
             self.attrs[key] = value
         raise KeyError("%s is read only or does not exist" % (key))
 
@@ -185,6 +185,39 @@ class Push(object):
 
     def update(self, dismissed):
         return self.pb.update_push(iden=self.attrs['iden'], dismissed=dismissed)
+
+
+class RealTime(object):
+    def __init__(self, pb):
+        self.pb = pb
+        self._push_modified = 0
+        self._push_cache = []
+
+    def connect(self):
+        url = "wss://stream.pushbullet.com/websocket/"+self.pb.api_key
+        push = self.pb.list_pushes(limit=1)
+        if push:
+            self._push_modified = push[0]['modified']
+        self.ws = create_connection(url)
+
+    def _update_push_cache(self, limit=None):
+        self._push_cache = self.pb.list_pushes(modified_after=self._push_modified, limit=limit)
+        if self._push_cache:
+            self._push_modified = self._push_cache[0]['modified']
+
+    def get_event(self):
+        if self._push_cache:
+            return self._push_cache.pop()
+        data = self.ws.recv()
+        data = json.loads(data)
+        while data['type'] == "nop":
+            data = self.ws.recv()
+            data = json.loads(data)
+
+        if data['type'] == "tickle" and data['subtype'] == "push":
+            if not self._push_cache:
+                self._update_push_cache()
+            return self._push_cache.pop()
 
 
 class PushBullet(object):
@@ -200,6 +233,7 @@ class PushBullet(object):
             'User-Agent': self.user_agent,
             'Access-Token': self.api_key
         }
+        print(method, path, postdata, params, files)
         r = requests.request(
             method,
             self.base_url+path,
@@ -208,7 +242,6 @@ class PushBullet(object):
             headers=headers,
             files=files,
         )
-        print(r.text)
         r.raise_for_status()
         return r.json()
 
@@ -424,7 +457,7 @@ class PushBullet(object):
         response = self._request("POST", "pushes/"+iden, {'dismissed': dismissed})
         return Push(self, **response)
 
-    def list_pushes(self, modified_after=None, active=None, cursor=None, limit=None):
+    def list_pushes(self, modified_after=None, active=None, cursor=None, limit=15):
         """
             Request push history
             https://docs.pushbullet.com/#list-pushes
@@ -465,3 +498,5 @@ class PushBullet(object):
             https://docs.pushbullet.com/#delete-all-pushes
         """
         self._request("DELETE", "pushes")
+
+
