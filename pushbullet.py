@@ -225,6 +225,8 @@ class RealTime(object):
                 self._update_push_cache()
             return self._push_cache.pop()
 
+        return data
+
 
 class PushBullet(object):
     def __init__(self, api_key, user_agent="pyPushBullet", base_url=BASE_URL):
