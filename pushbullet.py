@@ -186,6 +186,9 @@ class Push(object):
     def __getitem__(self, key):
         return self.attrs[key]
 
+    def __contains__(self, key):
+        return key in self.attrs
+
     def dismiss(self):
         return self.update(dismissed=True)
 
