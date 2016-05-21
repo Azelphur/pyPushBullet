@@ -213,7 +213,7 @@ class RealTime(object):
 
     def get_event(self):
         if self._push_cache:
-            return self._push_cache.pop()
+            return Push(self.pb, **self._push_cache.pop())
         data = self.ws.recv()
         data = json.loads(data)
         while data['type'] == "nop":
@@ -223,9 +223,9 @@ class RealTime(object):
         if data['type'] == "tickle" and data['subtype'] == "push":
             if not self._push_cache:
                 self._update_push_cache()
-            return self._push_cache.pop()
+            return Push(self.pb, **self._push_cache.pop())
 
-        return data
+        return Push(self.pb, **data["push"])
 
 
 class PushBullet(object):
