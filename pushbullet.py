@@ -23,9 +23,14 @@
 
 import requests
 import json
-from urlparse import urljoin
 from os.path import basename
 from websocket import create_connection
+
+import sys
+if sys.version_info > (3, 0):
+    from urllib.parse import urlparse
+else:
+    from urlparse import urljoin
 
 BASE_URL = "https://api.pushbullet.com/v2/"
 
