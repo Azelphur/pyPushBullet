@@ -186,11 +186,33 @@ class Push(object):
     def __getitem__(self, key):
         return self.attrs[key]
 
+    def __contains__(self, key):
+        return key in self.attrs
+
     def dismiss(self):
         return self.update(dismissed=True)
 
     def update(self, dismissed):
         return self.pb.update_push(iden=self.attrs['iden'], dismissed=dismissed)
+
+class Ephemeral(Push):
+    """
+        This class represents an ephemeral, see https://docs.pushbullet.com/v2/#ephemerals
+    """
+    def dismiss(self):
+        if "notification_tag" in self:
+            notification_tag = self["notification_tag"]
+        else:
+            notification_tag = None
+
+        data = {"push": {"package_name": self["package_name"],
+                         "source_user_iden": self["source_user_iden"],
+                         "notification_tag": notification_tag,
+                         "notification_id": self["notification_id"],
+                         "type": "dismissal"},
+                "type": "push"}
+
+        return self.pb._request("POST", "ephemerals", data)
 
 
 class RealTime(object):
@@ -213,7 +235,7 @@ class RealTime(object):
 
     def get_event(self):
         if self._push_cache:
-            return self._push_cache.pop()
+            return Push(self.pb, **self._push_cache.pop())
         data = self.ws.recv()
         data = json.loads(data)
         while data['type'] == "nop":
@@ -223,7 +245,12 @@ class RealTime(object):
         if data['type'] == "tickle" and data['subtype'] == "push":
             if not self._push_cache:
                 self._update_push_cache()
-            return self._push_cache.pop()
+            return Push(self.pb, **self._push_cache.pop())
+
+        elif data['type'] == "push" and data['push']['type'] == "mirror":
+            return Ephemeral(self.pb, **data['push'])
+
+        return Push(self.pb, **data["push"])
 
 
 class PushBullet(object):
