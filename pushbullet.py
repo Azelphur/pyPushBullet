@@ -455,8 +455,9 @@ class PushBullet(object):
             else:
                 _magic = magic.open(magic.MIME_TYPE)
                 _magic.compile(None)
+                _magic.load(None)
 
-                file_type = _magic.file(file_name)
+                file_type = _magic.file(file.name)
 
                 _magic.close()
             file.seek(0)
