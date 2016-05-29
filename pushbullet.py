@@ -357,7 +357,7 @@ class PushBullet(object):
 
             If no target is specified, a push will be sent to all devices, note that only one target can be specified.
         """
-        if not any(title, body):
+        if not (title or body):
             raise ValidationError("You must specify title or body")
 
         data = {
