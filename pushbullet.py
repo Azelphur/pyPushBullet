@@ -36,7 +36,27 @@ else:
 BASE_URL = "https://api.pushbullet.com/v2/"
 
 
-class Device(object):
+# Prototype for PushBullet objects such as devices, pushes, etc.
+class _Object(object):
+    def __init__(self, pb, **kwargs):
+        assert type(self) != _Object
+
+        self.pb = pb
+        self.attrs = kwargs
+
+    def __setitem__(self, key, value):
+        if key in self.writable_attributes:
+            self.attrs[key] = value
+        raise KeyError("%s is read only or does not exist" % (key))
+
+    def __getitem__(self, key):
+        return self.attrs[key]
+
+    def __contains__(self, key):
+        return key in self.attrs
+
+
+class Device(_Object):
     """
         This class represents a device
         https://docs.pushbullet.com/#device
@@ -50,20 +70,6 @@ class Device(object):
         'icon',
         'has_sms'
     ]
-
-    def __init__(self, pb, **kwargs):
-        self.pb = pb
-        self.attrs = kwargs
-
-
-    def __setitem__(self, key, value):
-        if key in self.writable_attributes:
-            self.attrs[key] = value
-            return
-        raise AttributeError("%s is read only" % (key))
-
-    def __getitem__(self, key):
-        return self.attrs[key]
 
     def push_note(self, title=None, body=None):
         """
@@ -169,26 +175,11 @@ class Device(object):
         return self.pb.delete_device(self.attrs['iden'])
 
 
-class Push(object):
+class Push(_Object):
     """
         This class represents a push, see https://docs.pushbullet.com/#push
     """
     writable_attributes = ['dismissed']
-
-    def __init__(self, pb, **kwargs):
-        self.pb = pb
-        self.attrs = kwargs
-
-    def __setitem__(self, key, value):
-        if key in self.writable_attributes:
-            self.attrs[key] = value
-        raise KeyError("%s is read only or does not exist" % (key))
-
-    def __getitem__(self, key):
-        return self.attrs[key]
-
-    def __contains__(self, key):
-        return key in self.attrs
 
     def dismiss(self):
         return self.update(dismissed=True)
@@ -196,7 +187,7 @@ class Push(object):
     def update(self, dismissed):
         return self.pb.update_push(iden=self.attrs['iden'], dismissed=dismissed)
 
-class Ephemeral(Push):
+class Ephemeral(_Object):
     """
         This class represents an ephemeral, see https://docs.pushbullet.com/v2/#ephemerals
     """
