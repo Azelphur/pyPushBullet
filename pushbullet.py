@@ -524,5 +524,3 @@ class PushBullet(object):
             https://docs.pushbullet.com/#delete-all-pushes
         """
         self._request("DELETE", "pushes")
-
-
