@@ -39,7 +39,8 @@ BASE_URL = "https://api.pushbullet.com/v2/"
 # Prototype for PushBullet objects such as devices, pushes, etc.
 class _Object(object):
     def __init__(self, pb, **kwargs):
-        assert type(self) != _Object
+        if type(self) == _Object:
+            raise NotImplementedError("This is a prototype")
 
         self.pb = pb
         self.attrs = kwargs
@@ -329,7 +330,7 @@ class PushBullet(object):
             https://docs.pushbullet.com/#list-devices
         """
         data = self._request("GET", "devices")
-        return [Device(device, self) for device in data['devices']]
+        return [Device(self, **device) for device in data['devices']]
 
     def delete_device(self, device_iden):
         """
