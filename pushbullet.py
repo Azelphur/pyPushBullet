@@ -24,8 +24,11 @@
 
 import requests
 import json
+import os
+import pprint
 from os.path import basename
 from websocket import create_connection
+from textwrap import TextWrapper
 
 import sys
 if sys.version_info > (3, 0):
@@ -33,8 +36,18 @@ if sys.version_info > (3, 0):
 else:
     from urlparse import urljoin
 
-BASE_URL = "https://api.pushbullet.com/v2/"
+import logging
+from logging import debug, info
 
+if "PYPUSHBULLET_DEBUG" in os.environ and \
+   os.environ["PYPUSHBULLET_DEBUG"] == "1":
+
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+else:
+    logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+
+BASE_URL = "https://api.pushbullet.com/v2/"
 
 # Prototype for PushBullet objects such as devices, pushes, etc.
 class _Object(object):
@@ -259,7 +272,13 @@ class PushBullet(object):
             'User-Agent': self.user_agent,
             'Access-Token': self.api_key
         }
-        print(method, path, postdata, params, files)
+
+        debug("%s ==> %s\n" % (method, path) +
+              "  Headers:\n" +
+              pprint.pformat(headers, indent=4, depth=4) + "\n" +
+              "  Data:\n" +
+              pprint.pformat(postdata, indent=4, depth=4) + "\n")
+
         r = requests.request(
             method,
             self.base_url+path,
