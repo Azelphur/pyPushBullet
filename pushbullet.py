@@ -93,9 +93,16 @@ class _Object(object):
         except HTTPError as e:
             _Object._handle_http_error(e, self['iden'])
 
+    @classmethod
+    def get(cls, pb, iden):
+        try:
+            return cls(pb, **pb._request('GET', '%s/%s' % (cls.path, iden)))
+        except HTTPError as e:
+            cls._handle_http_error(e, iden)
+
     def delete(self):
         try:
-            return self._request("DELETE", "%s/%s" % (self.path, self['iden']))
+            return self.pb._request("DELETE", "%s/%s" % (self.path, self['iden']))
         except HTTPError as e:
             _Object._handle_http_error(e, self['iden'])
 
