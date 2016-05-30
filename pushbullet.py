@@ -29,6 +29,7 @@ import pprint
 from os.path import basename
 from websocket import create_connection
 from textwrap import TextWrapper
+from requests import HTTPError
 
 import sys
 if sys.version_info > (3, 0):
@@ -69,11 +70,43 @@ class _Object(object):
     def __contains__(self, key):
         return key in self.attrs
 
+    def _handle_http_error(e, iden):
+        if e.response.status_code == 404:
+            raise PushBullet.ObjectNotFoundError(iden)
+        else:
+            raise e
+
+    def commit(self):
+        data = dict()
+        for attribute in self.writable_attributes:
+            if attribute in self:
+                data[attribute] = self[attribute]
+
+        # If the object has been created
+        if 'iden' in self.attrs:
+            path = "%s/%s" % (self.path, self['iden'])
+        else:
+            path = self.path
+
+        try:
+            self.attrs = self.pb._request('POST', path, data)
+        except HTTPError as e:
+            _Object._handle_http_error(e, self['iden'])
+
 
 class Device(_Object):
     """
         This class represents a device
         https://docs.pushbullet.com/#device
+
+        Attributes:
+        nickname -- Name to use when displaying the device
+        model -- Model of the device
+        manufacturer -- Manufacturer of the device
+        push_token -- Platform-specific push token
+        app_version -- Version of the Pushbullet application
+        icon -- Icon to use for this device
+        has_sms -- true if devices has SMS capability
     """
     writable_attributes = [
         'nickname',
@@ -84,6 +117,7 @@ class Device(_Object):
         'icon',
         'has_sms'
     ]
+    path = "devices"
 
     def push_note(self, title=None, body=None):
         """
@@ -135,52 +169,6 @@ class Device(_Object):
             body=body
         )
 
-    def update(self, nickname=None, model=None, manufacturer=None, push_token=None, app_version=None, icon=None, has_sms=None):
-        """
-            Update an existing device
-            https://docs.pushbullet.com/#update-device
-
-            Arguments:
-            nickname -- Name to use when displaying the device
-            model -- Model of the device
-            manufacturer -- Manufacturer of the device
-            push_token -- Platform-specific push token
-            app_version -- Version of the Pushbullet application
-            icon -- Icon to use for this device
-            has_sms -- true if devices has SMS capability
-        """
-        return self.pb.update_device(
-            device_iden=self.attrs['iden'],
-            nickname=nickname,
-            model=model,
-            manufacturer=manufacturer,
-            push_token=push_token,
-            app_version=app_version,
-            icon=icon,
-            has_sms=has_sms
-        )
-
-    def commit(self):
-        """
-            Creates device if it does not exist, otherwise updates.
-        """
-        if 'iden' in self.attrs:
-            f = self.update
-        else:
-            f = self.pb.create_device
-
-        device = f(
-            nickname=self.attrs['nickname'] if 'nickname' in self.attrs else None,
-            model=self.attrs['model'] if 'model' in self.attrs else None,
-            manufacturer=self.attrs['manufacturer'] if 'manufacturer' in self.attrs else None,
-            push_token=self.attrs['push_token'] if 'push_token' in self.attrs else None,
-            app_version=self.attrs['app_version'] if 'app_version' in self.attrs else None,
-            icon=self.attrs['icon'] if 'icon' in self.attrs else None,
-            has_sms=self.attrs['has_sms'] if 'has_sms' in self.attrs else None
-        )
-        self.attrs = dict(device.attrs)
-        return device
-
     def delete(self):
         """
             Delete a device
@@ -194,12 +182,14 @@ class Push(_Object):
         This class represents a push, see https://docs.pushbullet.com/#push
     """
     writable_attributes = ['dismissed']
+    path="pushes"
 
     def dismiss(self):
-        return self.update(dismissed=True)
+        self.attrs['dismissed'] = True
+        return self.commit()
 
-    def update(self, dismissed):
-        return self.pb.update_push(iden=self.attrs['iden'], dismissed=dismissed)
+    def delete(self):
+        return self.pb._request("DELETE", "devices/" + self.attrs['iden'])
 
 class Ephemeral(_Object):
     """
@@ -289,59 +279,6 @@ class PushBullet(object):
         )
         r.raise_for_status()
         return r.json()
-
-    def create_device(self, nickname=None, model=None, manufacturer=None, push_token=None, app_version=None, icon=None, has_sms=None):
-        """
-            Create a new device
-            https://docs.pushbullet.com/#create-device
-
-            Arguments:
-            nickname -- Name to use when displaying the device
-            model -- Model of the device
-            manufacturer -- Manufacturer of the device
-            push_token -- Platform-specific push token
-            app_version -- Version of the Pushbullet application
-            icon -- Icon to use for this device
-            has_sms -- true if devices has SMS capability
-        """
-        data = {
-            'nickname': nickname,
-            'model': model,
-            'manufacturer': manufacturer,
-            'push_token': push_token,
-            'app_version': app_version,
-            'icon': icon,
-            'has_sms': has_sms
-        }
-        response = self._request("POST", "devices", data)
-        return Device(pb=self, **response)
-
-    def update_device(self, device_iden, nickname=None, model=None, manufacturer=None, push_token=None, app_version=None, icon=None, has_sms=None):
-        """
-            Update an existing device
-            https://docs.pushbullet.com/#update-device
-
-            Arguments:
-            device_iden -- The devices identifier
-            nickname -- Name to use when displaying the device
-            model -- Model of the device
-            manufacturer -- Manufacturer of the device
-            push_token -- Platform-specific push token
-            app_version -- Version of the Pushbullet application
-            icon -- Icon to use for this device
-            has_sms -- true if devices has SMS capability
-        """
-        data = {
-            'nickname': nickname,
-            'model': model,
-            'manufacturer': manufacturer,
-            'push_token': push_token,
-            'app_version': app_version,
-            'icon': icon,
-            'has_sms': has_sms
-        }
-        response = self._request("POST", "devices/"+device_iden, data)
-        return Device(pb=self, **response)
 
     def list_devices(self):
         """
@@ -491,18 +428,6 @@ class PushBullet(object):
         response = self._request("POST", "pushes", data)
         return Push(self, **response)
 
-    def update_push(self, iden, dismissed):
-        """
-            Update a push
-            https://docs.pushbullet.com/#update-push
-
-            Arguments:
-            iden -- The iden of the push
-            dismissed -- Marks a push as having been dismissed by the user
-        """
-        response = self._request("POST", "pushes/"+iden, {'dismissed': dismissed})
-        return Push(self, **response)
-
     def list_pushes(self, modified_after=None, active=None, cursor=None, limit=15):
         """
             Request push history
@@ -544,3 +469,7 @@ class PushBullet(object):
             https://docs.pushbullet.com/#delete-all-pushes
         """
         self._request("DELETE", "pushes")
+
+    class ObjectNotFoundError(Exception):
+        def __init__(self, iden):
+            super().__init__(self, "Object with iden %s not found" % iden)
