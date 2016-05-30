@@ -93,6 +93,12 @@ class _Object(object):
         except HTTPError as e:
             _Object._handle_http_error(e, self['iden'])
 
+    def delete(self):
+        try:
+            return self._request("DELETE", "%s/%s" % (self.path, self['iden']))
+        except HTTPError as e:
+            _Object._handle_http_error(e, self['iden'])
+
 
 class Device(_Object):
     """
@@ -169,14 +175,6 @@ class Device(_Object):
             body=body
         )
 
-    def delete(self):
-        """
-            Delete a device
-            https://docs.pushbullet.com/#delete-device
-        """
-        return self.pb.delete_device(self.attrs['iden'])
-
-
 class Push(_Object):
     """
         This class represents a push, see https://docs.pushbullet.com/#push
@@ -187,9 +185,6 @@ class Push(_Object):
     def dismiss(self):
         self.attrs['dismissed'] = True
         return self.commit()
-
-    def delete(self):
-        return self.pb._request("DELETE", "devices/" + self.attrs['iden'])
 
 class Ephemeral(_Object):
     """
@@ -287,16 +282,6 @@ class PushBullet(object):
         """
         data = self._request("GET", "devices")
         return [Device(self, **device) for device in data['devices']]
-
-    def delete_device(self, device_iden):
-        """
-            Delete a device
-            https://docs.pushbullet.com/#delete-device
-
-            Arguments:
-            device_iden -- The identifier of the device to delete
-        """
-        self._request("DELETE", "devices/"+device_iden)
 
     def push_note(self, title=None, body=None, device_iden=None, email=None, channel_tag=None, client_iden=None):
         """
@@ -451,16 +436,6 @@ class PushBullet(object):
             response = self._request("GET", "pushes", params=params)
             pushes += [Push(self, **push) for push in response['pushes']]
         return pushes
-
-    def delete_push(self, iden):
-        """
-            Delete a push
-            https://docs.pushbullet.com/#delete-push
-
-            Arguments:
-            iden -- The iden of the push
-        """
-        self._request("DELETE", "pushes/"+device_iden)
 
     def delete_all_pushes(self):
         """
