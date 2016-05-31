@@ -62,7 +62,8 @@ class _Object(object):
     def __setitem__(self, key, value):
         if key in self.writable_attributes:
             self.attrs[key] = value
-        raise KeyError("%s is read only or does not exist" % (key))
+        else:
+            raise KeyError("%s is read only or does not exist" % (key))
 
     def __getitem__(self, key):
         return self.attrs[key]
