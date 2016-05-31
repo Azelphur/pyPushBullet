@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 
@@ -23,8 +24,11 @@
 
 import requests
 import json
+import os
+import pprint
 from os.path import basename
 from websocket import create_connection
+from textwrap import TextWrapper
 
 import sys
 if sys.version_info > (3, 0):
@@ -32,10 +36,41 @@ if sys.version_info > (3, 0):
 else:
     from urlparse import urljoin
 
+import logging
+from logging import debug, info
+
+if "PYPUSHBULLET_DEBUG" in os.environ and \
+   os.environ["PYPUSHBULLET_DEBUG"] == "1":
+
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+
+else:
+    logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+
 BASE_URL = "https://api.pushbullet.com/v2/"
 
+# Prototype for PushBullet objects such as devices, pushes, etc.
+class _Object(object):
+    def __init__(self, pb, **kwargs):
+        if type(self) == _Object:
+            raise NotImplementedError("This is a prototype")
 
-class Device(object):
+        self.pb = pb
+        self.attrs = kwargs
+
+    def __setitem__(self, key, value):
+        if key in self.writable_attributes:
+            self.attrs[key] = value
+        raise KeyError("%s is read only or does not exist" % (key))
+
+    def __getitem__(self, key):
+        return self.attrs[key]
+
+    def __contains__(self, key):
+        return key in self.attrs
+
+
+class Device(_Object):
     """
         This class represents a device
         https://docs.pushbullet.com/#device
@@ -49,20 +84,6 @@ class Device(object):
         'icon',
         'has_sms'
     ]
-
-    def __init__(self, pb, **kwargs):
-        self.pb = pb
-        self.attrs = kwargs
-
-
-    def __setitem__(self, key, value):
-        if key in self.writable_attributes:
-            self.attrs[key] = value
-            return
-        raise AttributeError("%s is read only" % (key))
-
-    def __getitem__(self, key):
-        return self.attrs[key]
 
     def push_note(self, title=None, body=None):
         """
@@ -168,26 +189,11 @@ class Device(object):
         return self.pb.delete_device(self.attrs['iden'])
 
 
-class Push(object):
+class Push(_Object):
     """
         This class represents a push, see https://docs.pushbullet.com/#push
     """
     writable_attributes = ['dismissed']
-
-    def __init__(self, pb, **kwargs):
-        self.pb = pb
-        self.attrs = kwargs
-
-    def __setitem__(self, key, value):
-        if key in self.writable_attributes:
-            self.attrs[key] = value
-        raise KeyError("%s is read only or does not exist" % (key))
-
-    def __getitem__(self, key):
-        return self.attrs[key]
-
-    def __contains__(self, key):
-        return key in self.attrs
 
     def dismiss(self):
         return self.update(dismissed=True)
@@ -195,7 +201,7 @@ class Push(object):
     def update(self, dismissed):
         return self.pb.update_push(iden=self.attrs['iden'], dismissed=dismissed)
 
-class Ephemeral(Push):
+class Ephemeral(_Object):
     """
         This class represents an ephemeral, see https://docs.pushbullet.com/v2/#ephemerals
     """
@@ -266,7 +272,13 @@ class PushBullet(object):
             'User-Agent': self.user_agent,
             'Access-Token': self.api_key
         }
-        print(method, path, postdata, params, files)
+
+        debug("%s ==> %s\n" % (method, path) +
+              "  Headers:\n" +
+              pprint.pformat(headers, indent=4, depth=4) + "\n" +
+              "  Data:\n" +
+              pprint.pformat(postdata, indent=4, depth=4) + "\n")
+
         r = requests.request(
             method,
             self.base_url+path,
@@ -337,7 +349,7 @@ class PushBullet(object):
             https://docs.pushbullet.com/#list-devices
         """
         data = self._request("GET", "devices")
-        return [Device(device, self) for device in data['devices']]
+        return [Device(self, **device) for device in data['devices']]
 
     def delete_device(self, device_iden):
         """
@@ -364,7 +376,7 @@ class PushBullet(object):
 
             If no target is specified, a push will be sent to all devices, note that only one target can be specified.
         """
-        if not any(title, body):
+        if not (title or body):
             raise ValidationError("You must specify title or body")
 
         data = {
@@ -443,8 +455,9 @@ class PushBullet(object):
             else:
                 _magic = magic.open(magic.MIME_TYPE)
                 _magic.compile(None)
+                _magic.load(None)
 
-                file_type = _magic.file(file_name)
+                file_type = _magic.file(file.name)
 
                 _magic.close()
             file.seek(0)
@@ -531,5 +544,3 @@ class PushBullet(object):
             https://docs.pushbullet.com/#delete-all-pushes
         """
         self._request("DELETE", "pushes")
-
-
