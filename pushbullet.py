@@ -25,7 +25,6 @@
 import requests
 import json
 import os
-import pprint
 from os.path import basename
 from websocket import create_connection
 from textwrap import TextWrapper
@@ -267,10 +266,16 @@ class PushBullet(object):
         }
 
         debug("%s ==> %s\n" % (method, path) +
-              "  Headers:\n" +
-              pprint.pformat(headers, indent=4, depth=4) + "\n" +
-              "  Data:\n" +
-              pprint.pformat(postdata, indent=4, depth=4) + "\n")
+              "  Headers: {\n" +
+              "".join(["    \"%s\": %s\n" % (attr, headers[attr])
+                       for attr in headers]) +
+              "  }\n" + (
+                  "  Data:\n" +
+                  "".join(["    \"%s\": %s\n" % (attr, postdata[attr])
+                           for attr in postdata]) +
+                      "  }\n" if postdata
+                  else "")
+             )
 
         r = requests.request(
             method,
