@@ -112,6 +112,9 @@ def push_file(args):
         print("File %s sent to %s" % (response["iden"],
                                       response["target_device_iden"]))
 
+def get_user(args):
+    pprint(pushbullet.User.get(pb).attrs)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("api_key")
@@ -162,6 +165,9 @@ file.add_argument('device', type=str, help="The device ID")
 file.add_argument('file',   type=str, help="The path to the file")
 file.add_argument('body',   type=str, help="A message to include with the file", nargs=argparse.REMAINDER)
 file.set_defaults(func=push_file)
+
+user = subparser.add_parser('get-user', help='Get info on the current user', add_help=True)
+user.set_defaults(func=get_user)
 
 args = parser.parse_args()
 pb = pushbullet.PushBullet(args.api_key)

@@ -212,6 +212,26 @@ class Ephemeral(_Object):
 
         return self.pb._request("POST", "ephemerals", data)
 
+class User(_Object):
+    """
+        This class represents the current user, see
+        https://docs.pushbullet.com/v2/#users
+    """
+    path="users"
+
+    def __setitem__(self, key, value):
+        raise AttributeError("'User' object has no attribute '__setitem__'")
+
+    def commit(self):
+        raise AttributeError("'User' object has no attribute 'commit'")
+
+    def delete(self):
+        raise AttributeError("'User' object has no attribute 'delete'")
+
+    @classmethod
+    def get(cls, pb):
+        return super().get(pb, "me")
+
 
 class RealTime(object):
     def __init__(self, pb):
