@@ -27,26 +27,55 @@ import sys
 import json
 import os
 import pushbullet
+from pprint import pprint
 from requests.exceptions import HTTPError
 
 pb = None
 
 def add_device(args):
-    device = pushbullet.Device(pb, nickname=args.nickname)
+    device = pushbullet.Device(pb, nickname=args.name,
+                               model=args.model if 'model' in args else None,
+                               type=args.type if 'type' in args else None)
     device.commit()
-    print("Device %s was assigned ID %s" % (device["nickname"],
-                                            device["iden"]))
 
-def get_devices(args):
-    devices = pb.list_devices()
+    print("Device created:")
+    pprint(device.attrs)
 
-    for device in devices:
-        if "manufacturer" in device:
-            print("%s %s %s" % (device["iden"],
-                                device["manufacturer"],
-                                device["model"]))
-        else:
-            print(device["iden"])
+def update_device(args):
+    device = pushbullet.Device.get(pb, args.iden)
+
+    if 'name' in args:
+        device['nickname'] = args.name
+    if 'model' in args:
+        device['model'] = args.model
+    if 'manufacturer' in args:
+        device['manufacturer'] = args.manufacturer
+    if 'icon' in args:
+        device['icon'] = args.icon
+
+    device.commit()
+    print("Device updated:")
+    pprint(device.attrs)
+
+def get_device(args):
+    try:
+        pprint(pushbullet.Device.get(pb, args.iden).attrs)
+    except pushbullet.PushBullet.ObjectNotFoundError as e:
+        print(e)
+        sys.exit(1)
+
+def list_devices(args):
+    for device in pb.list_devices():
+        pprint(device.attrs)
+
+def delete_device(args):
+    try:
+        pushbullet.Device(pb, iden=args.iden).delete()
+    except pushbullet.PushBullet.ObjectNotFoundError as e:
+        print(e)
+        sys.exit(1)
+
+    print("Deleted device with iden %s" % args.iden)
 
 def push_note(args):
     response = pb.push_note(args.title, " ".join(args.body), args.device)
@@ -88,30 +117,50 @@ parser = argparse.ArgumentParser()
 parser.add_argument("api_key")
 subparser = parser.add_subparsers(dest="type")
 
-getdevices = subparser.add_parser("getdevices", help="Get a list of devices")
-getdevices.set_defaults(func=get_devices)
+device = subparser.add_parser('device', help='Manage devices')
+device_subparser = device.add_subparsers(dest='action')
 
-adddevice = subparser.add_parser("adddevice", help="Add a new devices to your account")
-adddevice.add_argument('nickname')
-adddevice.set_defaults(func=add_device)
+device_add = device_subparser.add_parser('add', help='Create a new device')
+device_add.add_argument('name',           metavar=None, type=str, help='The name of the device')
+device_add.add_argument('--manufacturer', metavar='m',  type=str, help='The manufacturer of the device')
+device_add.add_argument('--icon',         metavar='i',  type=str, help='The icon to use for the device')
+device_add.set_defaults(func=add_device)
 
-note = subparser.add_parser("note", help="Send a note")
-note.add_argument('device', type=str, help="Device ID")
-note.add_argument('title')
-note.add_argument('body', nargs=argparse.REMAINDER)
+device_get = device_subparser.add_parser('get', help='Get information on a device')
+device_get.add_argument('iden', type=str, help='The iden of the device')
+device_get.set_defaults(func=get_device)
+
+device_list = device_subparser.add_parser('list', help='List the available devices')
+device_list.set_defaults(func=list_devices)
+
+device_update = device_subparser.add_parser('update', help='Update the device\'s attributes')
+device_update.add_argument('iden',           metavar=None, type=str, help='The name of the device')
+device_update.add_argument('--name',         metavar='n',  type=str, help='The nickname for the device')
+device_update.add_argument('--manufacturer', metavar='m',  type=str, help='The manufacturer of the device')
+device_update.add_argument('--icon',         metavar='i',  type=str, help='The icon to use for the device')
+device_update.set_defaults(func=update_device)
+
+device_delete = device_subparser.add_parser('delete', help='Delete a device')
+device_delete.add_argument('iden', type=str, help='The iden of the device')
+device_delete.set_defaults(func=delete_device)
+
+note = subparser.add_parser("note", help="Send a note", add_help=True)
+note.add_argument('device', type=str, help="The device ID")
+note.add_argument('title',  type=str, help="The title of the note")
+note.add_argument('body',   type=str, help="The contents of the note", nargs=argparse.REMAINDER)
 note.set_defaults(func=push_note)
 
-link = subparser.add_parser("link", help="Send a link")
-link.add_argument('device', type=str, help="Device ID")
-link.add_argument('title')
-link.add_argument('url')
-link.add_argument('body', nargs=argparse.REMAINDER)
+link = subparser.add_parser("link", help="Send a link", add_help=True)
+link.add_argument('device', type=str, help="The device ID")
+link.add_argument('title',  type=str, help="The name of the link")
+link.add_argument('url',    type=str, help="The link")
+link.add_argument('body',   type=str, help="A message to include with the link", nargs=argparse.REMAINDER)
 link.set_defaults(func=push_link)
 
-file = subparser.add_parser("file", help="Send a file")
-file.add_argument('device', type=str, help="Device ID")
-file.add_argument('file')
-file.add_argument('body', nargs=argparse.REMAINDER)
+file = subparser.add_parser("file", help="Send a file", add_help=True)
+file.add_argument('device', type=str, help="The device ID")
+file.add_argument('file',   type=str, help="The path to the file")
+file.add_argument('body',   type=str, help="A message to include with the file", nargs=argparse.REMAINDER)
 file.set_defaults(func=push_file)
 
 args = parser.parse_args()
