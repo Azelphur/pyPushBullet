@@ -80,7 +80,7 @@ class _Object(object):
 
     def _handle_http_error(e, iden):
         if e.response.status_code == 404:
-            raise PushBullet.ObjectNotFoundError(iden)
+            raise PushBullet.ObjectNotFoundError(iden) from e
         else:
             raise e
 
