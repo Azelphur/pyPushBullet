@@ -331,7 +331,12 @@ class PushBullet(object):
             files=files,
         )
         r.raise_for_status()
-        return r.json()
+        resp = r.json()
+
+        debug('%s <== %s\n' % (method, path) + \
+              pprint.pformat(resp, compact=True) + '\n')
+
+        return resp
 
     def _encrypt(self, data):
         iv = os.urandom(12)
