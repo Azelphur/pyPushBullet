@@ -25,6 +25,7 @@
 import requests
 import json
 import os
+import pprint
 from os.path import basename
 from websocket import create_connection
 from textwrap import TextWrapper
@@ -308,17 +309,11 @@ class PushBullet(object):
             'Access-Token': self.api_key
         }
 
-        debug("%s ==> %s\n" % (method, path) +
-              "  Headers: {\n" +
-              "".join(["    \"%s\": %s\n" % (attr, headers[attr])
-                       for attr in headers]) +
-              "  }\n" + (
-                  "  Data:\n" +
-                  "".join(["    \"%s\": %s\n" % (attr, postdata[attr])
-                           for attr in postdata]) +
-                      "  }\n" if postdata
-                  else "")
-             )
+        debug('%s ==> %s\n' % (method, path) + \
+              'Headers:\n' + \
+              pprint.pformat(headers, compact=True) + '\n' + \
+              'Data:\n' + \
+              pprint.pformat(postdata, compact=True) + '\n')
 
         if encrypted_fields and self._crypto_algo:
             for field in encrypted_fields:
