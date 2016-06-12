@@ -270,6 +270,10 @@ class RealTime(object):
 
                 data[field] = json.loads(self.pb._decrypt(data[field]['ciphertext']))
 
+        def _debug(data):
+            debug("<== <real time>\n" +
+                  pprint.pformat(data) + "\n")
+
         if self._push_cache:
             return Push(self.pb, **self._push_cache.pop())
 
@@ -277,10 +281,14 @@ class RealTime(object):
         data = json.loads(data)
         decrypt_message(data)
 
+        _debug(data)
+
         while data['type'] == "nop":
             data = self.ws.recv()
             data = json.loads(data)
             decrypt_message(data)
+
+            _debug(data)
 
         if data['type'] == "tickle" and data['subtype'] == "push":
             if not self._push_cache:
