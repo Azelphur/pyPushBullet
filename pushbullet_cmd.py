@@ -117,7 +117,8 @@ def get_user(args):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("api_key")
+parser.add_argument('api_key',    metavar=None, type=str, help='The API key to use')
+parser.add_argument('--password', metavar='p',  type=str, help='Password for end to end encryption')
 subparser = parser.add_subparsers(dest="type")
 
 device = subparser.add_parser('device', help='Manage devices')
@@ -171,4 +172,8 @@ user.set_defaults(func=get_user)
 
 args = parser.parse_args()
 pb = pushbullet.PushBullet(args.api_key)
+
+if 'password' in args:
+    pb.set_e2e_key(args.password)
+
 args.func(args)
