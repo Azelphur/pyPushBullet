@@ -25,10 +25,18 @@
 import requests
 import json
 import os
+import pprint
 from os.path import basename
 from websocket import create_connection
 from textwrap import TextWrapper
 from requests import HTTPError
+from base64 import b64encode, b64decode
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.backends import default_backend
+from cryptography.exceptions import InvalidTag
 
 import sys
 if sys.version_info > (3, 0):
@@ -48,6 +56,7 @@ else:
     logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 
 BASE_URL = "https://api.pushbullet.com/v2/"
+ENCRYPTION_VERSION=1
 
 # Prototype for PushBullet objects such as devices, pushes, etc.
 class _Object(object):
@@ -72,7 +81,7 @@ class _Object(object):
 
     def _handle_http_error(e, iden):
         if e.response.status_code == 404:
-            raise PushBullet.ObjectNotFoundError(iden)
+            raise PushBullet.ObjectNotFoundError(iden) from e
         else:
             raise e
 
@@ -210,7 +219,28 @@ class Ephemeral(_Object):
                          "type": "dismissal"},
                 "type": "push"}
 
-        return self.pb._request("POST", "ephemerals", data)
+        return self.pb._request('POST', 'ephemerals', data,
+                                encrypted_fields=['push'])
+
+class User(_Object):
+    """
+        This class represents the current user, see
+        https://docs.pushbullet.com/v2/#users
+    """
+    path="users"
+
+    def __setitem__(self, key, value):
+        raise AttributeError("'User' object has no attribute '__setitem__'")
+
+    def commit(self):
+        raise AttributeError("'User' object has no attribute 'commit'")
+
+    def delete(self):
+        raise AttributeError("'User' object has no attribute 'delete'")
+
+    @classmethod
+    def get(cls, pb):
+        return super().get(pb, "me")
 
 
 class RealTime(object):
@@ -232,13 +262,33 @@ class RealTime(object):
             self._push_modified = self._push_cache[0]['modified']
 
     def get_event(self):
+        def decrypt_message(data):
+            for field in data:
+                if not isinstance(data[field], dict) or \
+                   'encrypted' not in data[field] or not data[field]['encrypted']:
+                    continue
+
+                data[field] = json.loads(self.pb._decrypt(data[field]['ciphertext']))
+
+        def _debug(data):
+            debug("<== <real time>\n" +
+                  pprint.pformat(data) + "\n")
+
         if self._push_cache:
             return Push(self.pb, **self._push_cache.pop())
+
         data = self.ws.recv()
         data = json.loads(data)
+        decrypt_message(data)
+
+        _debug(data)
+
         while data['type'] == "nop":
             data = self.ws.recv()
             data = json.loads(data)
+            decrypt_message(data)
+
+            _debug(data)
 
         if data['type'] == "tickle" and data['subtype'] == "push":
             if not self._push_cache:
@@ -252,12 +302,14 @@ class RealTime(object):
 
 
 class PushBullet(object):
-    def __init__(self, api_key, user_agent="pyPushBullet", base_url=BASE_URL):
+    def __init__(self, api_key, e2e_key=None, user_agent="pyPushBullet", base_url=BASE_URL):
         self.api_key = api_key
         self.user_agent = user_agent
         self.base_url = base_url
 
-    def _request(self, method, path, postdata=None, params=None, files=None):
+        self.set_e2e_key(e2e_key)
+
+    def _request(self, method, path, postdata=None, params=None, files=None, encrypted_fields=None):
         headers = {
             'Accept': "application/json",
             'Content-Type': "application/json",
@@ -265,17 +317,18 @@ class PushBullet(object):
             'Access-Token': self.api_key
         }
 
-        debug("%s ==> %s\n" % (method, path) +
-              "  Headers: {\n" +
-              "".join(["    \"%s\": %s\n" % (attr, headers[attr])
-                       for attr in headers]) +
-              "  }\n" + (
-                  "  Data:\n" +
-                  "".join(["    \"%s\": %s\n" % (attr, postdata[attr])
-                           for attr in postdata]) +
-                      "  }\n" if postdata
-                  else "")
-             )
+        debug('%s ==> %s\n' % (method, path) + \
+              'Headers:\n' + \
+              pprint.pformat(headers, compact=True) + '\n' + \
+              'Data:\n' + \
+              pprint.pformat(postdata, compact=True) + '\n')
+
+        if encrypted_fields and self._crypto_algo:
+            for field in encrypted_fields:
+                encrypted_data = self._encrypt(json.dumps(postdata[field]))
+
+                postdata[field] = {'ciphertext': encrypted_data,
+                                   'encrypted': True}
 
         r = requests.request(
             method,
@@ -286,7 +339,63 @@ class PushBullet(object):
             files=files,
         )
         r.raise_for_status()
-        return r.json()
+        resp = r.json()
+
+        debug('%s <== %s\n' % (method, path) + \
+              pprint.pformat(resp, compact=True) + '\n')
+
+        return resp
+
+    def _encrypt(self, data):
+        iv = os.urandom(12)
+        cipher = Cipher(self._crypto_algo, modes.GCM(iv), default_backend())
+        encryptor = cipher.encryptor()
+
+        data = encryptor.update(bytes(data, encoding='utf-8')) + \
+               encryptor.finalize()
+
+        encoded_message = bytes(str(ENCRYPTION_VERSION), 'utf-8') + \
+                          encryptor.tag + iv + data
+
+        return str(b64encode(encoded_message), 'utf-8')
+
+    def _decrypt(self, b64_data):
+        data = bytearray(b64decode(b64_data))
+
+        # Extract all of the data from the encoded message
+        version = str(data[:1], encoding='utf-8'); del data[:1]
+        tag = bytes(data[:16]); del data[:16]
+        iv = bytes(data[:12]); del data[:12]
+
+        message = bytes(data)
+
+        if version != str(ENCRYPTION_VERSION):
+            raise DecryptionError('Unsupported encryption encoding')
+
+        cipher = Cipher(self._crypto_algo, modes.GCM(iv, tag),
+                        backend=default_backend())
+        decryptor = cipher.decryptor()
+
+        try:
+            return str(decryptor.update(message) + decryptor.finalize(),
+                       'utf-8')
+        except InvalidTag as e:
+            raise PushBullet.DecryptionError(e, 'Invalid password') \
+                    from original_exc
+
+    def set_e2e_key(self, password):
+        """
+            Sets the password to use for End-to-End Encryption.
+            https://docs.pushbullet.com/#end-to-end-encryption
+        """
+        if password is None:
+            self._crypto_algo = None
+            return
+
+        kdf = PBKDF2HMAC(hashes.SHA256(), 32,
+                         bytes(User.get(self)['iden'], 'utf-8'), 30000,
+                         backend=default_backend())
+        self._crypto_algo = algorithms.AES(kdf.derive(bytes(password, 'utf-8')))
 
     def list_devices(self):
         """
@@ -461,3 +570,12 @@ class PushBullet(object):
     class ObjectNotFoundError(Exception):
         def __init__(self, iden):
             super().__init__(self, "Object with iden %s not found" % iden)
+
+    class DecryptionError(Exception):
+        """
+            Thrown whenever we fail to decrypt an incoming message
+        """
+        def __init__(self, message, original_exception=None):
+            super().__init__(self, message)
+
+            self.original_exception = original_exception

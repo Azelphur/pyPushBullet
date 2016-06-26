@@ -112,9 +112,13 @@ def push_file(args):
         print("File %s sent to %s" % (response["iden"],
                                       response["target_device_iden"]))
 
+def get_user(args):
+    pprint(pushbullet.User.get(pb).attrs)
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument("api_key")
+parser.add_argument('api_key',    metavar=None, type=str, help='The API key to use')
+parser.add_argument('--password', metavar='p',  type=str, help='Password for end to end encryption')
 subparser = parser.add_subparsers(dest="type")
 
 device = subparser.add_parser('device', help='Manage devices')
@@ -163,6 +167,13 @@ file.add_argument('file',   type=str, help="The path to the file")
 file.add_argument('body',   type=str, help="A message to include with the file", nargs=argparse.REMAINDER)
 file.set_defaults(func=push_file)
 
+user = subparser.add_parser('get-user', help='Get info on the current user', add_help=True)
+user.set_defaults(func=get_user)
+
 args = parser.parse_args()
 pb = pushbullet.PushBullet(args.api_key)
+
+if 'password' in args:
+    pb.set_e2e_key(args.password)
+
 args.func(args)
